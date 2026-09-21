@@ -1,5 +1,12 @@
 {
+<<<<<<< HEAD
     "recommendations": [
        "Webnative.webnative"
     ]
 }
+=======
+  "recommendations": [
+    "Webnative.webnative"
+  ]
+}
+>>>>>>> 2577732 (Agregando el backend en la carpeta server)
