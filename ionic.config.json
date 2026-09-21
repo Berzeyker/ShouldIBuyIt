@@ -1,0 +1,7 @@
+{
+  "name": "ShouldIBuyIt",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
