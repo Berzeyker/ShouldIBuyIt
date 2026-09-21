@@ -1,6 +1,3 @@
-Aquí tienes el contenido completo en formato Markdown, redactado en **inglés** y con un diseño profesional listo para que solo lo copies, lo pegues en tu archivo `README.md` de VS Code y lo subas a GitHub:
-
-```markdown
 # 🛒 Should I Buy It?
 
 > An intelligent shopping assistant designed to help users make conscious financial decisions, evaluate real needs, and prevent impulse buying.
@@ -48,63 +45,3 @@ Follow these steps to set up the project locally:
 ```bash
 git clone [https://github.com/Berzeyker/ShouldIBuyIt.git](https://github.com/Berzeyker/ShouldIBuyIt.git)
 cd ShouldIBuyIt
-
-```
-
-### 2. Install dependencies
-
-```bash
-npm install
-
-```
-
-### 3. Run the development server
-
-```bash
-ionic serve
-
-```
-
-The application will open automatically in your browser at `http://localhost:8100`.
-
----
-
-## 📱 iOS Deployment
-
-To build and run the app on an iOS simulator or physical device using Capacitor:
-
-1. **Build the project web assets:**
-```bash
-ionic build
-
-```
-
-
-2. **Add and sync the iOS platform:**
-```bash
-npx cap add ios
-npx cap sync ios
-
-```
-
-
-3. **Open Xcode:**
-```bash
-npx cap open ios
-
-```
-
-
-*Select your target simulator inside Xcode and hit the **Play (Run)** button.*
-
----
-
-## 🤝 Contributing
-
-Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://www.google.com/search?q=https://github.com/Berzeyker/ShouldIBuyIt/issues&utm_source=gemini).
-
----
-
-## 📄 License
-
-This project is developed for academic and portfolio purposes.
