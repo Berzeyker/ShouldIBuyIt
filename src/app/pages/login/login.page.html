@@ -6,13 +6,18 @@
         <div class="login">
           <h1>Should I Buy It?</h1>
           
-          <!-- Contenedor simple sin <form> para evitar bloqueos -->
+          <!-- Controles de Autenticación (Login & Register) -->
           <div class="form-group">
             <input type="text" [(ngModel)]="username" placeholder="Username">
             <input type="password" [(ngModel)]="password" placeholder="Password">
             
-            <!-- Botón con evento click directo -->
+            <!-- Botón para Iniciar Sesión -->
             <button type="button" (click)="onLogin()">Let me in.</button>
+            
+            <!-- Botón para Registrar Nuevo Usuario -->
+            <button type="button" class="btn-register" (click)="onRegister()" style="background: rgba(0, 0, 0, 0.4); color: #fff; margin-top: 10px; border: 1px solid rgba(255, 255, 255, 0.2);">
+              Register new account
+            </button>
           </div>
 
         </div>
