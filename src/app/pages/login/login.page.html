@@ -1,0 +1,26 @@
+<ion-content [scrollY]="false">
+  <div class="background-forest">
+    <div class="mask">
+      <div class="modal">
+        <div class="circle" style="background-image: url('/assets/images/PFP/pfp.jpg');"></div>
+        <div class="login">
+          <h1>Should I Buy It?</h1>
+          
+          <!-- Contenedor simple sin <form> para evitar bloqueos -->
+          <div class="form-group">
+            <input type="text" [(ngModel)]="username" placeholder="Username">
+            <input type="password" [(ngModel)]="password" placeholder="Password">
+            
+            <!-- Botón con evento click directo -->
+            <button type="button" (click)="onLogin()">Let me in.</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="copy">
+    <a href="https://github.com/Berzeyker" target="_blank">Crafted by: <b>@Berzeyker</b><br/>:)</a>
+  </div>
+</ion-content>

@@ -1,17 +1,77 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>
-      Tab 1
-    </ion-title>
-  </ion-toolbar>
-</ion-header>
+<ion-content [fullscreen]="true" class="home-content">
+  
+  <!-- Video de Fondo corregido -->
+  <video autoplay muted loop playsinline class="background-video">
+    <source src="/assets/images/Backgrounds/backvideo.mp4" type="video/mp4">
+    Tu navegador no soporta video de fondo.
+  </video>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Tab 1</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <!-- Capa oscura translúcida -->
+  <div class="video-overlay"></div>
 
-  <app-explore-container name="Tab 1 page"></app-explore-container>
+  <!-- Menú Superior / Navbar totalmente transparente tipo Glass -->
+  <div class="top-navbar">
+    <div class="nav-brand">
+      <span class="brand-icon">🛡️</span>
+      <span class="brand-title">Should I Buy It?</span>
+    </div>
+    <div class="nav-actions">
+      <button class="icon-btn" title="Perfil">
+        <ion-icon name="person-circle-outline"></ion-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Contenedor Principal de la Vista -->
+  <div class="main-container">
+
+    <!-- Encabezado de bienvenida -->
+    <div class="header-section">
+      <span class="badge">Análisis Inteligente</span>
+      <h2>¿Vale la pena la compra?</h2>
+      <p>Evalúa tus impulsos antes de gastar tu dinero.</p>
+    </div>
+
+    <!-- Tarjeta Principal de Evaluación (Glass) -->
+    <div class="evaluation-card">
+      <div class="card-title">
+        <span class="icon">🛒</span>
+        <h3>Nuevo Artículo</h3>
+      </div>
+      
+      <div class="input-group">
+        <label>¿Qué producto o servicio es?</label>
+        <input type="text" [(ngModel)]="producto" placeholder="Ej. Audífonos Bluetooth, Suscripción...">
+      </div>
+
+      <div class="input-group">
+        <label>Precio del producto ($)</label>
+        <input type="number" [(ngModel)]="precio" placeholder="0.00">
+      </div>
+
+      <div class="input-group">
+        <label>¿Qué tanta necesidad tienes? (1 al 10)</label>
+        <div class="slider-container">
+          <input type="range" min="1" max="10" value="5" class="slider" [(ngModel)]="necesidad" #urgencyRange>
+          <span class="slider-value">{{ urgencyRange.value }}</span>
+        </div>
+      </div>
+
+      <button class="evaluate-btn" (click)="analizarCompra()">
+        <span>Analizar Compra</span>
+        <ion-icon name="arrow-forward-outline"></ion-icon>
+      </button>
+    </div>
+
+    <!-- Tarjeta de Consejo (Glass) -->
+    <div class="tip-card">
+      <span class="tip-icon">💡</span>
+      <div class="tip-content">
+        <h4>Regla de las 48 horas</h4>
+        <p>Si no es una emergencia vital, espera dos días antes de confirmar el pago para evitar compras por impulso.</p>
+      </div>
+    </div>
+
+  </div>
+
 </ion-content>
