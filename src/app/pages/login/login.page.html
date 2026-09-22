@@ -1,26 +1,32 @@
 <ion-content [scrollY]="false">
-  <div class="background-forest">
-    <div class="mask">
-      <div class="modal">
-        <div class="circle" style="background-image: url('/assets/images/PFP/pfp.jpg');"></div>
-        <div class="login">
-          <h1>Should I Buy It?</h1>
-          
-          <!-- Controles de Autenticación (Login & Register) -->
-          <div class="form-group">
-            <input type="text" [(ngModel)]="username" placeholder="Username">
-            <input type="password" [(ngModel)]="password" placeholder="Password">
-            
-            <!-- Botón para Iniciar Sesión -->
-            <button type="button" (click)="onLogin()">Let me in.</button>
-            
-            <!-- Botón para Registrar Nuevo Usuario -->
-            <button type="button" class="btn-register" (click)="onRegister()" style="background: rgba(0, 0, 0, 0.4); color: #fff; margin-top: 10px; border: 1px solid rgba(255, 255, 255, 0.2);">
-              Register new account
-            </button>
-          </div>
+  
+  <!-- Video de Fondo fijado con slot="fixed" -->
+  <video autoplay muted loop playsinline class="bg-video" slot="fixed">
+    <source src="/assets/images/Backgrounds/backvideo3.mp4" type="video/mp4">
+    Tu navegador no soporta videos HTML5.
+  </video>
 
+  <!-- Capa oscura también fijada para cubrir toda la pantalla -->
+  <div class="video-overlay" slot="fixed"></div>
+
+  <!-- Contenedor principal del modal -->
+  <div class="mask">
+    <div class="modal">
+      <div class="circle" style="background-image: url('/assets/images/PFP/pfp.jpg');"></div>
+      <div class="login">
+        <h1>Should I Buy It?</h1>
+        
+        <div class="form-group">
+          <input type="text" [(ngModel)]="username" placeholder="Username">
+          <input type="password" [(ngModel)]="password" placeholder="Password">
+          
+          <button type="button" (click)="onLogin()">Let me in.</button>
+          
+          <button type="button" class="btn-register" (click)="onRegister()">
+            Register new account
+          </button>
         </div>
+
       </div>
     </div>
   </div>
