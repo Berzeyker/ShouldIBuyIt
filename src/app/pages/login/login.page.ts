@@ -1,10 +1,11 @@
-import { Component, OnInit, AfterViewInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonContent } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { gsap } from 'gsap';
 import { StorageService } from '../../services/storage';
+import { Sileo } from 'sileo-angular'; // <--- Importación correcta para Angular
 
 @Component({
   selector: 'app-login',
@@ -16,11 +17,15 @@ import { StorageService } from '../../services/storage';
 export class LoginPage implements OnInit, AfterViewInit {
   username: string = '';
   password: string = '';
-  
-  // Mensajes de error para mostrar en la interfaz si lo deseas
   errorMessage: string = '';
 
-  constructor(private router: Router, private storageService: StorageService) {}
+  // Inyectamos el servicio Sileo compatible con Angular
+  private sileo = inject(Sileo);
+
+  constructor(
+    private router: Router, 
+    private storageService: StorageService
+  ) {}
 
   ngOnInit() {}
 
@@ -42,12 +47,12 @@ export class LoginPage implements OnInit, AfterViewInit {
     );
   }
 
-  // 1. FUNCIÓN PARA INICIAR SESIÓN (Valida si existe y la contraseña coincide)
- async onLogin() {
+  // 1. INICIAR SESIÓN CON NOTIFICACIONES SILEO
+  async onLogin() {
     this.errorMessage = '';
 
     if (!this.username || !this.password) {
-      alert('Por favor, completa todos los campos.');
+      this.sileo.warning({ title: 'Campos vacíos', description: 'Por favor, completa todos los campos.' });
       return;
     }
 
@@ -62,59 +67,56 @@ export class LoginPage implements OnInit, AfterViewInit {
         await this.storageService.set('usuario_actual', usuarioEncontrado);
         await this.storageService.set('isLoggedIn', true);
         
-        console.log('Inicio de sesión exitoso');
+        this.sileo.success({ title: '¡Bienvenido!', description: 'Inicio de sesión exitoso.' });
 
-        // 💡 SOLUCIÓN: Quitamos el foco del elemento actual antes de navegar
         if (document.activeElement instanceof HTMLElement) {
           document.activeElement.blur();
         }
 
-        this.router.navigateByUrl('/dashboard');
+        setTimeout(() => {
+          this.router.navigateByUrl('/dashboard');
+        }, 800);
+
       } else {
-        alert('Acceso denegado: Usuario o contraseña incorrectos.');
+        this.sileo.error({ title: 'Acceso denegado', description: 'Usuario o contraseña incorrectos.' });
       }
 
     } catch (error) {
       console.error('Error al iniciar sesión:', error);
-      alert('Ocurrió un error en el sistema.');
+      this.sileo.error({ title: 'Error', description: 'Ocurrió un error en el sistema.' });
     }
   }
 
-  // 2. FUNCIÓN PARA REGISTRAR NUEVOS USUARIOS
- async onRegister() {
+  // 2. REGISTRAR NUEVOS USUARIOS CON NOTIFICACIONES SILEO
+  async onRegister() {
     if (!this.username || !this.password) {
-      alert('Escribe un usuario y contraseña para registrarte.');
+      this.sileo.warning({ title: 'Atención', description: 'Escribe un usuario y contraseña para registrarte.' });
       return;
     }
 
     try {
       let usuariosRegistrados = (await this.storageService.get('lista_usuarios')) || [];
 
-      // Verificar si el usuario ya existe
       const existe = usuariosRegistrados.find((u: any) => u.username === this.username);
       if (existe) {
-        alert('Este usuario ya está registrado. Intenta iniciar sesión.');
+        this.sileo.info({ title: 'Usuario existente', description: 'Este usuario ya está registrado.' });
         return;
       }
 
-      // Agregar el nuevo usuario a la lista
       usuariosRegistrados.push({
         username: this.username,
         password: this.password,
         fechaCreacion: new Date().toISOString()
       });
 
-      // Guardar la lista actualizada
       await this.storageService.set('lista_usuarios', usuariosRegistrados);
       
-      // 🔍 AQUÍ AGREGAMOS ESTO PARA VERIFICAR EN LA CONSOLA
-      console.log('--- USUARIOS GUARDADOS ACTUALMENTE ---', usuariosRegistrados);
-      
-      alert('¡Usuario registrado con éxito! Ahora puedes iniciar sesión.');
+      this.sileo.success({ title: '¡Éxito!', description: 'Usuario registrado con éxito.' });
       this.password = ''; 
 
     } catch (error) {
       console.error('Error al registrar usuario:', error);
+      this.sileo.error({ title: 'Error', description: 'No se pudo completar el registro.' });
     }
   }
 }
