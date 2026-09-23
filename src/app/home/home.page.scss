@@ -1,0 +1,274 @@
+.home-content {
+  --background: transparent !important;
+  color: #f8fafc;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  position: relative;
+
+  /* Video de fondo fijo absoluto que no interfiere con el scroll */
+  .bg-video {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* Capa oscura superpuesta para dar contraste */
+  .video-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  /* Contenedor general que asegura el desplazamiento correcto por encima del video */
+  .page-scroll-wrapper {
+    position: relative;
+    z-index: 2;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 40px;
+  }
+
+  /* Barra superior */
+  .top-navbar {
+    position: sticky;
+    top: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    z-index: 10;
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      .brand-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #ffffff;
+      }
+    }
+
+    .nav-actions {
+      .icon-btn {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #f1f5f9;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+    }
+  }
+
+  .main-container {
+    padding: 16px;
+    max-width: 480px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+
+    .header-section {
+      margin-top: 4px;
+      margin-bottom: 18px;
+
+      .badge {
+        display: inline-block;
+        background: rgba(34, 197, 94, 0.15);
+        color: #4ade80;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 6px;
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+      }
+
+      h2 {
+        font-size: 22px;
+        font-weight: 700;
+        margin: 0 0 2px 0;
+        color: #ffffff;
+      }
+
+      p {
+        color: #94a3b8;
+        font-size: 12px;
+        margin: 0;
+      }
+    }
+
+    /* Tarjetas Liquid Glass */
+    .evaluation-card {
+      background: rgba(24, 24, 27, 0.65);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+      .card-title {
+        display: flex;
+        align-items: center;
+        margin-bottom: 14px;
+
+        .icon {
+          font-size: 16px;
+          margin-right: 8px;
+        }
+
+        h3 {
+          font-size: 14px;
+          font-weight: 600;
+          margin: 0;
+          color: #f1f5f9;
+        }
+      }
+
+      .input-group {
+        margin-bottom: 12px;
+
+        label {
+          display: block;
+          font-size: 10px;
+          font-weight: 600;
+          color: #94a3b8;
+          margin-bottom: 6px;
+          text-transform: uppercase;
+        }
+
+        input[type="number"] {
+          width: 100%;
+          background: rgba(9, 9, 11, 0.6);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 10px;
+          padding: 11px 14px;
+          color: #fff;
+          font-size: 14px;
+          outline: none;
+          box-sizing: border-box;
+
+          &:focus {
+            border-color: #22c55e;
+            box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25);
+          }
+        }
+      }
+
+      .evaluate-btn {
+        width: 100%;
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        color: #fff;
+        border: none;
+        padding: 11px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4);
+
+        &:hover {
+          opacity: 0.9;
+        }
+      }
+    }
+
+    .results-card {
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+
+        .stat-item {
+          background: rgba(9, 9, 11, 0.5);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 12px;
+          padding: 12px;
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+
+          .stat-label {
+            font-size: 10px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            font-weight: 600;
+          }
+
+          .stat-value {
+            font-size: 15px;
+            font-weight: 700;
+            color: #ffffff;
+
+            &.highlight {
+              color: #4ade80;
+            }
+          }
+        }
+      }
+    }
+
+    .routine-banner {
+      background: rgba(9, 9, 11, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      .routine-info {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+
+        .routine-name {
+          font-size: 13px;
+          font-weight: 700;
+          color: #ffffff;
+        }
+
+        .routine-status {
+          font-size: 10px;
+          color: #94a3b8;
+        }
+      }
+
+      .evaluate-btn-small {
+        background: #3b82f6;
+        color: #fff;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 11px;
+        cursor: pointer;
+      }
+    }
+  }
+}

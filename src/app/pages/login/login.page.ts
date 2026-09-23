@@ -74,7 +74,7 @@ export class LoginPage implements OnInit, AfterViewInit {
         }
 
         setTimeout(() => {
-          this.router.navigateByUrl('/dashboard');
+          this.router.navigateByUrl('/tabs/home');
         }, 800);
 
       } else {
