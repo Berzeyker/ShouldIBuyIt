@@ -1,15 +1,18 @@
 import { TestBed } from '@angular/core/testing';
-import { Storage } from './storage';
+import { StorageService } from './storage';
 
-describe('Storage', () => {
-  let service: Storage;
+describe('StorageService', () => {
+  let service: StorageService;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(Storage);
+    service = TestBed.inject(StorageService);
+    await service.clear();
   });
 
-  it('should be created', () => {
-    expect(service).toBeTruthy();
+  it('should be created and store a value', async () => {
+    await service.set('demo', { username: 'ana' });
+
+    expect(await service.get('demo')).toEqual({ username: 'ana' });
   });
 });

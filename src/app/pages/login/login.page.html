@@ -16,15 +16,35 @@
       <div class="login">
         <h1>Should I Buy It?</h1>
         
+        <div class="session-box">
+          <span class="session-label">Sesión</span>
+          <span class="session-status">{{ sessionStatus }}</span>
+          <small>Acceso seguro: requiere usuario y contraseña válidos.</small>
+        </div>
+
         <div class="form-group">
-          <input type="text" [(ngModel)]="username" placeholder="Username">
+          <input type="text" [(ngModel)]="username" (ngModelChange)="updateSessionStatus()" placeholder="Username">
           <input type="password" [(ngModel)]="password" placeholder="Password">
-          
+
           <button type="button" (click)="onLogin()">Let me in.</button>
-          
+
           <button type="button" class="btn-register" (click)="onRegister()">
             Register new account
           </button>
+        </div>
+
+        <div *ngIf="availableUsers.length" class="usuarios-registrados" style="margin-top: 16px;">
+          <p style="margin: 0 0 8px; font-size: 12px; opacity: 0.8; text-align: left;">Selecciona una cuenta</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <button
+              *ngFor="let user of availableUsers"
+              type="button"
+              (click)="onSelectUser(user.username)"
+              style="padding: 7px 10px; border-radius: 999px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); color: white; font-size: 12px; cursor: pointer;"
+            >
+              {{ user.username }}
+            </button>
+          </div>
         </div>
 
       </div>

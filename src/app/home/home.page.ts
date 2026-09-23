@@ -2,14 +2,17 @@ import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonContent, IonIcon } from '@ionic/angular';
+import { Router } from '@angular/router';
 import { addIcons } from 'ionicons';
 import { 
   personCircleOutline, 
   statsChartOutline, 
   barbellOutline, 
   scaleOutline, 
-  checkmarkOutline 
+  checkmarkOutline,
+  logOutOutline
 } from 'ionicons/icons';
+import { AuthApiService } from '../services/auth-api.service';
 
 @Component({
   selector: 'app-home',
@@ -28,15 +31,25 @@ export class HomePage {
   currentWeight: string = '';
   isLoading: boolean = false;
   successMessage: string = '';
+  currentUser: string = 'Usuario';
 
-  constructor() {
+  constructor(
+    private readonly authApiService: AuthApiService,
+    private readonly router: Router
+  ) {
     addIcons({ 
-      personCircleOutline, 
-      statsChartOutline, 
-      barbellOutline, 
-      scaleOutline, 
-      checkmarkOutline 
+      personCircleOutline,
+      statsChartOutline,
+      barbellOutline,
+      scaleOutline,
+      checkmarkOutline,
+      logOutOutline
     });
+  }
+
+  async ngOnInit() {
+    const user = await this.authApiService.getCurrentUser();
+    this.currentUser = user?.username || 'Usuario';
   }
 
   onWeightInput(event: any) {
@@ -65,5 +78,10 @@ export class HomePage {
 
   iniciarRutina() {
     console.log('Iniciando rutina de Push Day...');
+  }
+
+  async cambiarUsuario() {
+    await this.authApiService.logout();
+    this.router.navigateByUrl('/login');
   }
 }

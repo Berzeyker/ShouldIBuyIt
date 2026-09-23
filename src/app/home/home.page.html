@@ -19,8 +19,9 @@
         <span class="brand-title">openGym Tracker</span>
       </div>
       <div class="nav-actions">
-        <button class="icon-btn" title="Perfil">
-          <ion-icon name="person-circle-outline"></ion-icon>
+        <span class="brand-title" style="font-size: 12px; opacity: 0.85; margin-right: 8px;">{{ currentUser }}</span>
+        <button class="icon-btn" title="Cambiar usuario" (click)="cambiarUsuario()">
+          <ion-icon name="log-out-outline"></ion-icon>
         </button>
       </div>
     </div>

@@ -4,8 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { IonContent } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { gsap } from 'gsap';
-import { StorageService } from '../../services/storage';
-import { Sileo } from 'sileo-angular'; // <--- Importación correcta para Angular
+import { Sileo } from 'sileo-angular';
+import { AuthApiService } from '../../services/auth-api.service';
 
 @Component({
   selector: 'app-login',
@@ -18,36 +18,57 @@ export class LoginPage implements OnInit, AfterViewInit {
   username: string = '';
   password: string = '';
   errorMessage: string = '';
+  availableUsers: any[] = [];
+  sessionStatus: string = 'Sin sesión activa';
 
-  // Inyectamos el servicio Sileo compatible con Angular
   private sileo = inject(Sileo);
 
   constructor(
-    private router: Router, 
-    private storageService: StorageService
+    private router: Router,
+    private authApiService: AuthApiService
   ) {}
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.loadUsers();
+    this.updateSessionStatus();
+  }
 
   ngAfterViewInit() {
     this.initBounceAnimation();
   }
 
+  private async loadUsers() {
+    try {
+      this.availableUsers = await this.authApiService.getUsers();
+      this.updateSessionStatus();
+    } catch (error) {
+      console.error('Error cargando usuarios:', error);
+    }
+  }
+
+  updateSessionStatus() {
+    if (!this.username) {
+      this.sessionStatus = 'Sin sesión activa';
+      return;
+    }
+
+    this.sessionStatus = `Cuenta seleccionada: ${this.username}`;
+  }
+
   initBounceAnimation() {
     const $loginModal = document.querySelectorAll('.modal');
     gsap.fromTo(
-      $loginModal, 
-      { scale: 0, autoAlpha: 0 }, 
-      { 
-        scale: 1, 
-        autoAlpha: 1, 
-        duration: 1.2, 
-        ease: 'elastic.out(1, 0.3)' 
+      $loginModal,
+      { scale: 0, autoAlpha: 0 },
+      {
+        scale: 1,
+        autoAlpha: 1,
+        duration: 1.2,
+        ease: 'elastic.out(1, 0.3)'
       }
     );
   }
 
-  // 1. INICIAR SESIÓN CON NOTIFICACIONES SILEO
   async onLogin() {
     this.errorMessage = '';
 
@@ -57,37 +78,26 @@ export class LoginPage implements OnInit, AfterViewInit {
     }
 
     try {
-      const usuariosRegistrados = (await this.storageService.get('lista_usuarios')) || [];
+      const usuario = await this.authApiService.login(this.username, this.password);
+      this.availableUsers = await this.authApiService.getUsers();
+      this.password = '';
+      this.sessionStatus = `Sesión activa para ${usuario.username}`;
 
-      const usuarioEncontrado = usuariosRegistrados.find(
-        (u: any) => u.username === this.username && u.password === this.password
-      );
+      this.sileo.success({ title: '¡Bienvenido!', description: `Sesión iniciada para ${usuario.username}.` });
 
-      if (usuarioEncontrado) {
-        await this.storageService.set('usuario_actual', usuarioEncontrado);
-        await this.storageService.set('isLoggedIn', true);
-        
-        this.sileo.success({ title: '¡Bienvenido!', description: 'Inicio de sesión exitoso.' });
-
-        if (document.activeElement instanceof HTMLElement) {
-          document.activeElement.blur();
-        }
-
-        setTimeout(() => {
-          this.router.navigateByUrl('/tabs/home');
-        }, 800);
-
-      } else {
-        this.sileo.error({ title: 'Acceso denegado', description: 'Usuario o contraseña incorrectos.' });
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
       }
 
-    } catch (error) {
+      setTimeout(() => {
+        this.router.navigateByUrl('/tabs/home');
+      }, 800);
+    } catch (error: any) {
       console.error('Error al iniciar sesión:', error);
-      this.sileo.error({ title: 'Error', description: 'Ocurrió un error en el sistema.' });
+      this.sileo.error({ title: 'Acceso denegado', description: error?.message || 'Usuario o contraseña incorrectos.' });
     }
   }
 
-  // 2. REGISTRAR NUEVOS USUARIOS CON NOTIFICACIONES SILEO
   async onRegister() {
     if (!this.username || !this.password) {
       this.sileo.warning({ title: 'Atención', description: 'Escribe un usuario y contraseña para registrarte.' });
@@ -95,28 +105,32 @@ export class LoginPage implements OnInit, AfterViewInit {
     }
 
     try {
-      let usuariosRegistrados = (await this.storageService.get('lista_usuarios')) || [];
-
-      const existe = usuariosRegistrados.find((u: any) => u.username === this.username);
-      if (existe) {
-        this.sileo.info({ title: 'Usuario existente', description: 'Este usuario ya está registrado.' });
-        return;
-      }
-
-      usuariosRegistrados.push({
+      const nuevoUsuario = await this.authApiService.register({
         username: this.username,
         password: this.password,
-        fechaCreacion: new Date().toISOString()
       });
 
-      await this.storageService.set('lista_usuarios', usuariosRegistrados);
-      
-      this.sileo.success({ title: '¡Éxito!', description: 'Usuario registrado con éxito.' });
-      this.password = ''; 
-
-    } catch (error) {
+      this.availableUsers = await this.authApiService.getUsers();
+      this.sessionStatus = 'Cuenta creada. Inicia sesión con tu contraseña.';
+      this.sileo.success({
+        title: 'Usuario registrado',
+        description: `Se creó ${nuevoUsuario.username}. Ahora inicia sesión con tu contraseña.`
+      });
+      this.username = '';
+      this.password = '';
+    } catch (error: any) {
       console.error('Error al registrar usuario:', error);
-      this.sileo.error({ title: 'Error', description: 'No se pudo completar el registro.' });
+      this.sileo.error({ title: 'Error', description: error?.message || 'No se pudo completar el registro.' });
     }
+  }
+
+  async onSelectUser(username: string) {
+    this.username = username;
+    this.password = '';
+    this.updateSessionStatus();
+    this.sileo.info({
+      title: 'Cambio de usuario',
+      description: 'Escribe la contraseña para acceder a esta cuenta.'
+    });
   }
 }
