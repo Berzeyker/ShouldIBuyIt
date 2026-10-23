@@ -45,3 +45,20 @@ Follow these steps to set up the project locally:
 ```bash
 git clone [https://github.com/Berzeyker/ShouldIBuyIt.git](https://github.com/Berzeyker/ShouldIBuyIt.git)
 cd ShouldIBuyIt
+```
+
+## API REST de ejercicios
+
+La pestaña **Exercises** consume el servicio REST del directorio `server` y permite crear, consultar, reemplazar, editar parcialmente y eliminar ejercicios. Las operaciones muestran el estado de carga y los mensajes que devuelve la API.
+
+Configura `DATABASE_URL` en `server/.env` (consulta `server/.env.example`). Inicia el servidor con `cd server && npm install && npm run dev` y, en otra terminal, inicia Ionic con `npm start`.
+
+| Método | Ruta | Uso |
+| --- | --- | --- |
+| GET | `/api/exercises` | Lista los ejercicios |
+| POST | `/api/exercises` | Crea un ejercicio |
+| PUT | `/api/exercises/:id` | Reemplaza todos los campos |
+| PATCH | `/api/exercises/:id` | Actualiza solo los campos enviados |
+| DELETE | `/api/exercises/:id` | Elimina un ejercicio |
+
+La tabla `exercises` se crea automáticamente al usar la API; su definición también está en `database/schema.sql`.

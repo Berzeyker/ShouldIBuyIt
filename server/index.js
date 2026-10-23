@@ -41,6 +41,16 @@ async function ensureSchema() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       expires_at TIMESTAMPTZ NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS exercises (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      name VARCHAR(120) NOT NULL,
+      muscle_group VARCHAR(80) NOT NULL DEFAULT '',
+      equipment VARCHAR(80) NOT NULL DEFAULT '',
+      notes TEXT NOT NULL DEFAULT '',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
   `);
 }
 
@@ -291,6 +301,165 @@ app.post('/api/auth/switch-user', async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({ message: 'Error cambiando de usuario.', error: error.message });
+  }
+});
+
+function serializeExercise(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    muscleGroup: row.muscleGroup,
+    equipment: row.equipment,
+    notes: row.notes,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
+
+const exerciseSelect = `
+  SELECT id, name, muscle_group AS "muscleGroup", equipment, notes,
+         created_at AS "createdAt", updated_at AS "updatedAt"
+  FROM exercises
+`;
+
+function isValidExerciseId(id) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+}
+
+function readExerciseInput(body, { partial = false } = {}) {
+  const fields = {
+    name: 'name',
+    muscleGroup: 'muscle_group',
+    equipment: 'equipment',
+    notes: 'notes',
+  };
+  const maxLengths = { name: 120, muscleGroup: 80, equipment: 80 };
+  const input = {};
+
+  for (const [field, column] of Object.entries(fields)) {
+    if (partial && !Object.hasOwn(body ?? {}, field)) continue;
+    if (!partial && field !== 'name' && !Object.hasOwn(body ?? {}, field)) {
+      input[column] = '';
+      continue;
+    }
+    const value = body?.[field];
+    if (typeof value !== 'string') {
+      return { error: `El campo ${field} debe ser texto.` };
+    }
+    const normalizedValue = value.trim();
+    if (maxLengths[field] && normalizedValue.length > maxLengths[field]) {
+      return { error: `El campo ${field} supera el máximo de ${maxLengths[field]} caracteres.` };
+    }
+    input[column] = normalizedValue;
+  }
+
+  if (!partial && !Object.hasOwn(input, 'name')) {
+    return { error: 'El nombre del ejercicio es obligatorio.' };
+  }
+  if (Object.hasOwn(input, 'name') && !input.name) {
+    return { error: 'El nombre del ejercicio es obligatorio.' };
+  }
+  if (Object.keys(input).length === 0) {
+    return { error: 'Indica al menos un campo para actualizar.' };
+  }
+
+  return { input };
+}
+
+app.get('/api/exercises', async (req, res) => {
+  try {
+    await ensureSchema();
+    const result = await pool.query(`${exerciseSelect} ORDER BY created_at DESC`);
+    return res.json({ exercises: result.rows.map(serializeExercise) });
+  } catch (error) {
+    console.error('Error listando ejercicios:', error);
+    return res.status(500).json({ message: 'No se pudieron cargar los ejercicios.' });
+  }
+});
+
+app.post('/api/exercises', async (req, res) => {
+  const { input, error } = readExerciseInput(req.body);
+  if (error) return res.status(400).json({ message: error });
+
+  try {
+    await ensureSchema();
+    const result = await pool.query(
+      `INSERT INTO exercises (name, muscle_group, equipment, notes)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id, name, muscle_group AS "muscleGroup", equipment, notes,
+                 created_at AS "createdAt", updated_at AS "updatedAt"`,
+      [input.name, input.muscle_group, input.equipment, input.notes]
+    );
+    return res.status(201).json({
+      message: 'Ejercicio creado correctamente.',
+      exercise: serializeExercise(result.rows[0]),
+    });
+  } catch (error) {
+    console.error('Error creando ejercicio:', error);
+    return res.status(500).json({ message: 'No se pudo crear el ejercicio.' });
+  }
+});
+
+async function updateExercise(req, res, { partial = false } = {}) {
+  if (!isValidExerciseId(req.params.id)) {
+    return res.status(400).json({ message: 'El identificador del ejercicio no es válido.' });
+  }
+
+  const { input, error } = readExerciseInput(req.body, { partial });
+  if (error) return res.status(400).json({ message: error });
+
+  const columns = Object.keys(input);
+  const assignments = columns.map((column, index) => `${column} = $${index + 1}`);
+  assignments.push('updated_at = NOW()');
+  const values = columns.map((column) => input[column]);
+  values.push(req.params.id);
+
+  try {
+    await ensureSchema();
+    const result = await pool.query(
+      `UPDATE exercises SET ${assignments.join(', ')}
+       WHERE id = $${values.length}
+       RETURNING id, name, muscle_group AS "muscleGroup", equipment, notes,
+                 created_at AS "createdAt", updated_at AS "updatedAt"`,
+      values
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'No se encontró el ejercicio.' });
+    }
+    return res.json({
+      message: 'Ejercicio actualizado correctamente.',
+      exercise: serializeExercise(result.rows[0]),
+    });
+  } catch (error) {
+    console.error('Error actualizando ejercicio:', error);
+    return res.status(500).json({ message: 'No se pudo actualizar el ejercicio.' });
+  }
+}
+
+app.put('/api/exercises/:id', (req, res) => updateExercise(req, res));
+app.patch('/api/exercises/:id', (req, res) => updateExercise(req, res, { partial: true }));
+
+app.delete('/api/exercises/:id', async (req, res) => {
+  if (!isValidExerciseId(req.params.id)) {
+    return res.status(400).json({ message: 'El identificador del ejercicio no es válido.' });
+  }
+
+  try {
+    await ensureSchema();
+    const result = await pool.query(
+      'DELETE FROM exercises WHERE id = $1 RETURNING id',
+      [req.params.id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'No se encontró el ejercicio.' });
+    }
+    return res.json({
+      id: result.rows[0].id,
+      message: 'Ejercicio eliminado correctamente.',
+    });
+  } catch (error) {
+    console.error('Error eliminando ejercicio:', error);
+    return res.status(500).json({ message: 'No se pudo eliminar el ejercicio.' });
   }
 });
 
