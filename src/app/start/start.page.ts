@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonContent, IonIcon, IonSpinner, ViewWillEnter } from '@ionic/angular';
@@ -39,7 +39,7 @@ interface Draft {
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.Eager,
 })
-export class StartPage implements ViewWillEnter, OnDestroy {
+export class StartPage implements OnInit, ViewWillEnter, OnDestroy {
   workout: Workout | null = null;
   home: HomePayload | null = null;
   routines: Routine[] = [];
@@ -62,6 +62,7 @@ export class StartPage implements ViewWillEnter, OnDestroy {
   private saveTimer: any = null;
   private tickTimer: any = null;
   private restTimer: any = null;
+  private skipNextEnter = false;
 
   constructor(
     private readonly gymApi: GymApiService,
@@ -86,7 +87,16 @@ export class StartPage implements ViewWillEnter, OnDestroy {
     });
   }
 
+  ngOnInit() {
+    this.skipNextEnter = true;
+    this.reload();
+  }
+
   ionViewWillEnter() {
+    if (this.skipNextEnter) {
+      this.skipNextEnter = false;
+      return;
+    }
     this.reload();
   }
 
@@ -111,7 +121,7 @@ export class StartPage implements ViewWillEnter, OnDestroy {
         this.stopTicker();
       }
     } catch (error: any) {
-      this.errorMessage = error?.error?.message || 'No se pudo cargar la sesión.';
+      this.errorMessage = error?.error?.message || 'Could not load the session.';
     } finally {
       this.isLoading = false;
     }
@@ -139,7 +149,7 @@ export class StartPage implements ViewWillEnter, OnDestroy {
         this.workout = error.error.workout;
         this.adoptSession();
       } else {
-        this.errorMessage = error?.error?.message || 'No se pudo iniciar la sesión.';
+        this.errorMessage = error?.error?.message || 'Could not start the session.';
       }
     } finally {
       this.isStarting = false;
@@ -342,7 +352,7 @@ export class StartPage implements ViewWillEnter, OnDestroy {
           notes: this.workout.notes,
         });
       } catch {
-        this.errorMessage = 'No se pudo guardar la sesión automáticamente.';
+        this.errorMessage = 'Could not save the session automatically.';
       } finally {
         this.isSaving = false;
       }
@@ -411,7 +421,7 @@ export class StartPage implements ViewWillEnter, OnDestroy {
       this.drafts.clear();
       this.recap = workout;
     } catch (error: any) {
-      this.errorMessage = error?.error?.message || 'No se pudo terminar la sesión.';
+      this.errorMessage = error?.error?.message || 'Could not finish the session.';
     } finally {
       this.isFinishing = false;
     }
@@ -419,7 +429,7 @@ export class StartPage implements ViewWillEnter, OnDestroy {
 
   async discard() {
     if (!this.workout) return;
-    if (!window.confirm('¿Descartar la sesión y borrar las series registradas?')) return;
+    if (!window.confirm('Discard the session and delete the logged sets?')) return;
     try {
       await this.gymApi.deleteWorkout(this.workout.id);
       this.stopRest();
@@ -429,7 +439,7 @@ export class StartPage implements ViewWillEnter, OnDestroy {
       this.recap = null;
       this.reload();
     } catch (error: any) {
-      this.errorMessage = error?.error?.message || 'No se pudo descartar la sesión.';
+      this.errorMessage = error?.error?.message || 'Could not discard the session.';
     }
   }
 

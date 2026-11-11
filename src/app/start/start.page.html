@@ -10,7 +10,7 @@
     <div class="gym-navbar">
       <div class="gym-nav-brand">
         <span>🏋️</span>
-        <span class="gym-nav-title">{{ workout ? workout.name : 'Entrenar' }}</span>
+        <span class="gym-nav-title">{{ workout ? workout.name : 'Train' }}</span>
       </div>
       <div class="gym-nav-actions">
         <span class="nav-timer" *ngIf="workout && !isSaving">
@@ -36,22 +36,22 @@
       <ng-container *ngIf="!isLoading && !workout">
 
         <div class="header-section">
-          <span class="glass-badge">{{ home?.dayName || 'Hoy' }}</span>
-          <h2>¿Qué entrenamos hoy?</h2>
-          <p>Elige una rutina de tu plan o empieza una sesión libre.</p>
+          <span class="glass-badge">{{ home?.dayName || 'Today' }}</span>
+          <h2>What are we training today?</h2>
+          <p>Pick a routine from your plan or start a free session.</p>
         </div>
 
         <!-- Rutinas de hoy -->
         <div class="glass-card" *ngIf="home && home.todayRoutines.length > 0">
           <div class="card-title">
             <ion-icon name="calendar-outline" class="icon" style="color: #4ade80;"></ion-icon>
-            <h3>Rutinas de hoy</h3>
+            <h3>Today's routines</h3>
           </div>
           <div class="glass-row routine-row" *ngFor="let r of home.todayRoutines">
             <span class="routine-emoji">{{ r.emoji }}</span>
             <div class="glass-row-main">
               <span class="glass-row-title">{{ r.name }}</span>
-              <span class="glass-row-sub">{{ r.exerciseCount }} ejercicios</span>
+              <span class="glass-row-sub">{{ r.exerciseCount }} exercises</span>
             </div>
             <button class="glass-btn glass-btn-sm" (click)="startSession(r.id)" [disabled]="isStarting">
               <ion-icon name="play-outline"></ion-icon>
@@ -62,9 +62,9 @@
         <div class="glass-card" *ngIf="home && home.todayRoutines.length === 0">
           <div class="empty-state">
             <ion-icon name="calendar-outline" class="empty-icon"></ion-icon>
-            <p>Hoy toca descanso según tu plan.</p>
+            <p>Today is a rest day according to your plan.</p>
             <button class="glass-btn glass-btn-blue glass-btn-sm" style="margin-top:8px;" (click)="irAlPlan()">
-              Configurar mi semana
+              Set up my week
             </button>
           </div>
         </div>
@@ -73,13 +73,13 @@
         <div class="glass-card" *ngIf="otherRoutines().length > 0">
           <div class="card-title">
             <ion-icon name="barbell-outline" class="icon" style="color: #60a5fa;"></ion-icon>
-            <h3>Mis rutinas</h3>
+            <h3>My routines</h3>
           </div>
           <div class="glass-row routine-row" *ngFor="let r of otherRoutines()">
             <span class="routine-emoji">{{ r.emoji }}</span>
             <div class="glass-row-main">
               <span class="glass-row-title">{{ r.name }}</span>
-              <span class="glass-row-sub">{{ r.exercises.length }} ejercicios</span>
+              <span class="glass-row-sub">{{ r.exercises.length }} exercises</span>
             </div>
             <button class="glass-btn glass-btn-sm" (click)="startSession(r.id)" [disabled]="isStarting">
               <ion-icon name="play-outline"></ion-icon>
@@ -91,13 +91,13 @@
         <div class="glass-card">
           <div class="card-title">
             <ion-icon name="flame-outline" class="icon" style="color: #fbbf24;"></ion-icon>
-            <h3>Sesión libre</h3>
+            <h3>Free session</h3>
           </div>
           <p class="text-muted" style="margin:0 0 10px 0;">
-            Empieza sin rutina y añade ejercicios del catálogo sobre la marcha.
+            Start without a routine and add exercises from the catalog as you go.
           </p>
           <button class="glass-btn glass-btn-blue" (click)="startSession(null)" [disabled]="isStarting">
-            <span *ngIf="!isStarting"><ion-icon name="play-outline"></ion-icon> Entrenar libre</span>
+            <span *ngIf="!isStarting"><ion-icon name="play-outline"></ion-icon> Train free</span>
             <ion-spinner *ngIf="isStarting" name="crescent" style="width:16px;height:16px;"></ion-spinner>
           </button>
         </div>
@@ -110,15 +110,15 @@
         <div class="glass-card session-summary">
           <div class="stats-grid session-grid">
             <div class="stat-item">
-              <span class="stat-label">Tiempo</span>
+              <span class="stat-label">Time</span>
               <span class="stat-value">{{ elapsed() }}</span>
             </div>
             <div class="stat-item">
-              <span class="stat-label">Series</span>
+              <span class="stat-label">Sets</span>
               <span class="stat-value">{{ totalSets() }}</span>
             </div>
             <div class="stat-item">
-              <span class="stat-label">Volumen</span>
+              <span class="stat-label">Volume</span>
               <span class="stat-value">{{ totalVolume() | number: '1.0-0' }}</span>
             </div>
             <div class="stat-item">
@@ -132,17 +132,17 @@
         <div class="glass-card">
           <div class="card-title">
             <ion-icon name="barbell-outline" class="icon" style="color: #60a5fa;"></ion-icon>
-            <h3>Ejercicios ({{ workout.entries.length }})</h3>
+            <h3>Exercises ({{ workout.entries.length }})</h3>
             <button class="glass-btn glass-btn-blue glass-btn-sm card-title-action" (click)="openPicker()">
-              <span style="display:flex;align-items:center;gap:4px;"><ion-icon name="add-outline"></ion-icon> Añadir</span>
+              <span style="display:flex;align-items:center;gap:4px;"><ion-icon name="add-outline"></ion-icon> Add</span>
             </button>
           </div>
 
           <div *ngIf="workout.entries.length === 0" class="empty-state">
             <ion-icon name="barbell-outline" class="empty-icon"></ion-icon>
-            <p>Sin ejercicios todavía. Añade el primero desde el catálogo.</p>
+            <p>No exercises yet. Add the first one from the catalog.</p>
             <button class="glass-btn glass-btn-sm" style="margin-top:8px;" (click)="openPicker()">
-              <ion-icon name="add-outline"></ion-icon> Añadir ejercicio
+              <ion-icon name="add-outline"></ion-icon> Add exercise
             </button>
           </div>
 
@@ -153,7 +153,7 @@
                 <span class="ex-name">{{ en.name }}</span>
                 <span class="ex-meta">
                   {{ en.cfg.sets }} × {{ en.cfg.reps }}<span *ngIf="en.cfg.weight > 0"> · {{ en.cfg.weight }} kg</span>
-                  · {{ doneRows(en) }}/{{ en.cfg.sets }} series
+                  · {{ doneRows(en) }}/{{ en.cfg.sets }} sets
                 </span>
               </div>
               <span class="glass-badge" *ngIf="doneRows(en) >= en.cfg.sets">✔</span>
@@ -171,8 +171,8 @@
 
               <div class="last-hint">
                 <ion-icon name="trending-up-outline"></ion-icon>
-                <span *ngIf="en.last">Última marca: {{ en.last.w }} kg × {{ en.last.r }}</span>
-                <span *ngIf="!en.last">Primera vez con este ejercicio</span>
+                <span *ngIf="en.last">Last record: {{ en.last.w }} kg × {{ en.last.r }}</span>
+                <span *ngIf="!en.last">First time with this exercise</span>
                 <span class="glass-badge amber" *ngIf="en.note">{{ en.note }}</span>
               </div>
 
@@ -180,21 +180,21 @@
               <div class="set-row" *ngFor="let row of en.rows; let j = index" [class.warmup]="row.phase === 'warmup'">
                 <span class="set-num">{{ j + 1 }}</span>
                 <span class="set-val">{{ row.w }} kg × {{ row.r }}</span>
-                <span class="glass-badge amber" *ngIf="row.phase === 'warmup'">Calentamiento</span>
-                <span class="glass-badge" *ngIf="isPr(en, row)">¡PR!</span>
+                <span class="glass-badge amber" *ngIf="row.phase === 'warmup'">Warm-up</span>
+                <span class="glass-badge" *ngIf="isPr(en, row)">PR!</span>
                 <button class="glass-icon-btn sm" (click)="removeRow(en, j)">
                   <ion-icon name="close-outline"></ion-icon>
                 </button>
               </div>
 
               <p class="text-muted" *ngIf="en.rows.length === 0" style="margin:6px 0;">
-                Aún no has registrado series de este ejercicio.
+                You haven't logged any sets for this exercise yet.
               </p>
 
               <!-- Steppers de peso/reps -->
               <div class="stepper-grid">
                 <div class="stepper">
-                  <label class="glass-label">Peso (kg)</label>
+                  <label class="glass-label">Weight (kg)</label>
                   <div class="stepper-ctrl">
                     <button class="glass-icon-btn sm" (click)="bumpWeight(en, -2.5)">−</button>
                     <input class="stepper-input" type="number" min="0" step="0.5"
@@ -212,7 +212,7 @@
                   </div>
                 </div>
                 <div class="stepper">
-                  <label class="glass-label">Descanso (s)</label>
+                  <label class="glass-label">Rest (s)</label>
                   <div class="stepper-ctrl">
                     <button class="glass-icon-btn sm" (click)="bumpRest(en, -15)">−</button>
                     <span class="stepper-value">{{ en.cfg.restSec }}</span>
@@ -223,15 +223,15 @@
 
               <div class="set-actions">
                 <button class="glass-btn glass-btn-ghost glass-btn-sm" (click)="addRow(en, true)">
-                  Calentamiento
+                  Warm-up
                 </button>
                 <button class="glass-btn set-main-btn" (click)="addRow(en)">
-                  <ion-icon name="checkmark-outline"></ion-icon> Completar serie
+                  <ion-icon name="checkmark-outline"></ion-icon> Complete set
                 </button>
               </div>
 
               <button class="glass-btn glass-btn-danger glass-btn-sm" style="margin-top:10px;" (click)="removeEntry(i)">
-                <span style="display:flex;align-items:center;gap:4px;"><ion-icon name="trash-outline"></ion-icon> Quitar ejercicio</span>
+                <span style="display:flex;align-items:center;gap:4px;"><ion-icon name="trash-outline"></ion-icon> Remove exercise</span>
               </button>
             </div>
           </div>
@@ -241,12 +241,12 @@
         <div class="glass-card">
           <div class="card-title">
             <ion-icon name="save-outline" class="icon" style="color: #94a3b8;"></ion-icon>
-            <h3>Notas de la sesión</h3>
+            <h3>Session notes</h3>
           </div>
-          <textarea class="glass-input" rows="2" placeholder="¿Cómo te sientes? Notas rápidas..."
+          <textarea class="glass-input" rows="2" placeholder="How are you feeling? Quick notes..."
                     [ngModel]="workout.notes" (ngModelChange)="onNotes($event)"></textarea>
           <p class="text-muted" style="margin:6px 0 0 0;">
-            Se guarda automáticamente al terminar cada serie.
+            Saved automatically after each set.
           </p>
         </div>
 
@@ -254,12 +254,12 @@
         <div class="glass-card">
           <button class="glass-btn finish-btn" (click)="finish()" [disabled]="isFinishing">
             <span *ngIf="!isFinishing" style="display:flex;align-items:center;gap:6px;">
-              <ion-icon name="stop-outline"></ion-icon> Terminar sesión
+              <ion-icon name="stop-outline"></ion-icon> Finish session
             </span>
             <ion-spinner *ngIf="isFinishing" name="crescent" style="width:16px;height:16px;"></ion-spinner>
           </button>
           <button class="glass-btn glass-btn-danger" style="margin-top:8px;" (click)="discard()">
-            <span style="display:flex;align-items:center;gap:6px;"><ion-icon name="trash-outline"></ion-icon> Descartar sesión</span>
+            <span style="display:flex;align-items:center;gap:6px;"><ion-icon name="trash-outline"></ion-icon> Discard session</span>
           </button>
         </div>
       </ng-container>
@@ -271,10 +271,10 @@
     <div class="rest-head">
       <ion-icon name="timer-outline"></ion-icon>
       <span class="rest-time">{{ restRemaining }}s</span>
-      <span class="rest-label">descanso</span>
+      <span class="rest-label">rest</span>
       <div class="rest-actions">
         <button class="glass-btn glass-btn-ghost glass-btn-sm" (click)="addRestSec(15)">+15s</button>
-        <button class="glass-btn glass-btn-sm" (click)="stopRest()">Saltar</button>
+        <button class="glass-btn glass-btn-sm" (click)="stopRest()">Skip</button>
       </div>
     </div>
     <div class="glass-progress">
@@ -286,7 +286,7 @@
   <div class="glass-sheet-backdrop" *ngIf="pickerOpen"></div>
   <div class="glass-sheet" *ngIf="pickerOpen">
     <div class="glass-sheet-header">
-      <h3>Añadir ejercicio</h3>
+      <h3>Add exercise</h3>
       <button class="glass-icon-btn sm" (click)="closePicker()">
         <ion-icon name="close-outline"></ion-icon>
       </button>
@@ -298,20 +298,20 @@
   <div class="glass-sheet-backdrop" *ngIf="recap"></div>
   <div class="glass-sheet recap-sheet" *ngIf="recap">
     <div class="recap-emoji">🎉</div>
-    <h3 class="recap-title">¡Sesión terminada!</h3>
+    <h3 class="recap-title">Session complete!</h3>
     <p class="text-muted">{{ recap.name }}</p>
 
     <div class="recap-grid">
       <div class="stat-item">
-        <span class="stat-label">Duración</span>
+        <span class="stat-label">Duration</span>
         <span class="stat-value">{{ fmtDuration(recap.durationSec || 0) }}</span>
       </div>
       <div class="stat-item">
-        <span class="stat-label">Series</span>
+        <span class="stat-label">Sets</span>
         <span class="stat-value">{{ recapSets() }}</span>
       </div>
       <div class="stat-item">
-        <span class="stat-label">Volumen</span>
+        <span class="stat-label">Volume</span>
         <span class="stat-value">{{ recapVolume() | number: '1.0-0' }} kg</span>
       </div>
       <div class="stat-item">
@@ -323,15 +323,15 @@
     <div class="recap-ex" *ngFor="let en of recap.entries">
       <span class="recap-ex-name">{{ en.name }}</span>
       <span class="recap-ex-meta">
-        {{ workRows(en).length }} series · {{ entryVolume(en) | number: '1.0-0' }} kg
+        {{ workRows(en).length }} sets · {{ entryVolume(en) | number: '1.0-0' }} kg
       </span>
     </div>
 
     <button class="glass-btn glass-btn-blue" style="margin-top:14px;" (click)="goRecap('stats')">
-      <span style="display:flex;align-items:center;gap:6px;"><ion-icon name="ribbon-outline"></ion-icon> Ver estadísticas</span>
+      <span style="display:flex;align-items:center;gap:6px;"><ion-icon name="ribbon-outline"></ion-icon> View stats</span>
     </button>
     <button class="glass-btn glass-btn-ghost" style="margin-top:8px;" (click)="goRecap('home')">
-      Volver al inicio
+      Back to home
     </button>
   </div>
 

@@ -10,7 +10,7 @@
     <div class="gym-navbar">
       <div class="gym-nav-brand">
         <span>📚</span>
-        <span class="gym-nav-title">Ejercicios</span>
+        <span class="gym-nav-title">Exercises</span>
       </div>
       <div class="gym-nav-actions">
         <span class="gym-nav-title" style="font-size:11px; opacity:0.8;">
@@ -22,9 +22,9 @@
     <div class="gym-container">
 
       <div class="header-section">
-        <span class="glass-badge">Catálogo</span>
-        <h2>Biblioteca de ejercicios</h2>
-        <p>Busca, filtra y explora más de 5.600 ejercicios.</p>
+        <span class="glass-badge">Catalog</span>
+        <h2>Exercise library</h2>
+        <p>Search, filter and explore more than 5,600 exercises.</p>
       </div>
 
       <div class="glass-card" *ngIf="errorMessage">
@@ -39,7 +39,7 @@
         <div class="search-row">
           <ion-icon name="search-outline"></ion-icon>
           <input class="glass-input" type="text" [(ngModel)]="query" (input)="onQueryInput()"
-                 placeholder="Buscar ejercicio...">
+                 placeholder="Search exercise...">
           <button class="glass-icon-btn sm" *ngIf="query" (click)="clearQuery()">
             <ion-icon name="close-outline"></ion-icon>
           </button>
@@ -59,7 +59,7 @@
         </div>
 
         <p class="text-muted" style="margin:8px 0 0 0;">
-          {{ total }} ejercicios encontrados
+          {{ total }} exercises found
         </p>
       </div>
 
@@ -70,7 +70,7 @@
 
       <div *ngIf="!isLoading && results.length === 0" class="empty-state">
         <ion-icon name="search-outline" class="empty-icon"></ion-icon>
-        <p>Sin resultados. Prueba otros filtros.</p>
+        <p>No results. Try other filters.</p>
       </div>
 
       <div class="glass-row catalog-row" *ngFor="let ex of results" (click)="openDetail(ex)">
@@ -84,7 +84,7 @@
       </div>
 
       <button class="glass-btn glass-btn-ghost" *ngIf="offset < total" (click)="loadMore()" [disabled]="isLoading">
-        <span *ngIf="!isLoading">Cargar más ({{ total - offset }} restantes)</span>
+        <span *ngIf="!isLoading">Load more ({{ total - offset }} remaining)</span>
         <ion-spinner *ngIf="isLoading" name="crescent" style="width:16px;height:16px;"></ion-spinner>
       </button>
     </div>
@@ -109,7 +109,7 @@
       <button class="glass-btn glass-btn-ghost glass-btn-sm media-toggle" (click)="toggleClip()">
         <span style="display:flex;align-items:center;gap:4px;">
           <ion-icon [name]="showClip && !clipFailed ? 'image-outline' : 'videocam-outline'"></ion-icon>
-          {{ showClip && !clipFailed ? 'Ver imagen' : 'Ver vídeo' }}
+          {{ showClip && !clipFailed ? 'View image' : 'View video' }}
         </span>
       </button>
     </div>
@@ -123,11 +123,11 @@
 
     <div class="detail-facts">
       <div class="detail-fact">
-        <span class="glass-label">Músculo principal</span>
+        <span class="glass-label">Primary muscle</span>
         <span class="detail-fact-val">{{ detail.muscleGroup || detail.target }}</span>
       </div>
       <div class="detail-fact" *ngIf="detail.secondaryMuscles?.length">
-        <span class="glass-label">Secundarios</span>
+        <span class="glass-label">Secondary</span>
         <span class="detail-fact-val">{{ detail.secondaryMuscles.join(', ') }}</span>
       </div>
     </div>
@@ -137,7 +137,7 @@
       <p>{{ detail.description }}</p>
     </div>
     <div class="detail-text" *ngIf="detail.instructions?.length">
-      <span class="glass-label">Cómo hacerlo</span>
+      <span class="glass-label">How to do it</span>
       <ol>
         <li *ngFor="let step of detail.instructions">{{ step }}</li>
       </ol>
@@ -147,7 +147,7 @@
     <div class="detail-stats">
       <div class="card-title" style="margin-bottom:10px;">
         <ion-icon name="trending-up-outline" class="icon" style="color:#60a5fa;"></ion-icon>
-        <h3>Tu historial</h3>
+        <h3>Your history</h3>
       </div>
 
       <div *ngIf="detailLoading" class="empty-state">
@@ -155,25 +155,25 @@
       </div>
 
       <div *ngIf="!detailLoading && !detailStats" class="empty-state">
-        <p>Aún no has registrado este ejercicio.</p>
+        <p>You haven't logged this exercise yet.</p>
       </div>
 
       <ng-container *ngIf="!detailLoading && detailStats">
         <div class="stats-grid" *ngIf="detailStats.sessions.length > 0">
           <div class="stat-item">
-            <span class="stat-label">Sesiones</span>
+            <span class="stat-label">Sessions</span>
             <span class="stat-value">{{ detailStats.sessions.length }}</span>
           </div>
           <div class="stat-item" *ngIf="detailStats.best">
-            <span class="stat-label">Mejor</span>
+            <span class="stat-label">Best</span>
             <span class="stat-value highlight">{{ detailStats.best.w }} kg × {{ detailStats.best.r }}</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">Última</span>
+            <span class="stat-label">Last</span>
             <span class="stat-value">{{ detailStats.last ? detailStats.last.w + ' kg × ' + detailStats.last.r : '—' }}</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">Vol. total</span>
+            <span class="stat-label">Total vol.</span>
             <span class="stat-value">{{ detailStats.totalVolume | number: '1.0-0' }} kg</span>
           </div>
         </div>
@@ -191,17 +191,17 @@
     <!-- Añadir a rutina -->
     <button class="glass-btn glass-btn-blue" (click)="openAddToRoutine()">
       <span style="display:flex;align-items:center;gap:6px;">
-        <ion-icon name="add-outline"></ion-icon> Añadir a una rutina
+        <ion-icon name="add-outline"></ion-icon> Add to a routine
       </span>
     </button>
-    <button class="glass-btn glass-btn-ghost" style="margin-top:8px;" (click)="closeDetail()">Cerrar</button>
+    <button class="glass-btn glass-btn-ghost" style="margin-top:8px;" (click)="closeDetail()">Close</button>
   </div>
 
   <!-- Selector de rutina -->
   <div class="glass-sheet-backdrop" *ngIf="addToRoutineOpen"></div>
   <div class="glass-sheet mini-sheet" *ngIf="addToRoutineOpen">
     <div class="glass-sheet-header">
-      <h3>Añadir a rutina</h3>
+      <h3>Add to routine</h3>
       <button class="glass-icon-btn sm" (click)="closeAddToRoutine()">
         <ion-icon name="close-outline"></ion-icon>
       </button>
@@ -211,14 +211,14 @@
       <ion-spinner name="crescent" color="light"></ion-spinner>
     </div>
     <div *ngIf="!routinesLoading && routines.length === 0" class="empty-state">
-      <p>No tienes rutinas todavía.</p>
+      <p>You don't have any routines yet.</p>
     </div>
 
     <div class="glass-row" *ngFor="let r of routines" (click)="addToRoutine(r)">
       <span class="routine-emoji">{{ r.emoji }}</span>
       <div class="glass-row-main">
         <span class="glass-row-title">{{ r.name }}</span>
-        <span class="glass-row-sub">{{ r.exercises.length }} ejercicios</span>
+        <span class="glass-row-sub">{{ r.exercises.length }} exercises</span>
       </div>
       <ion-spinner *ngIf="addingRoutineId === r.id" name="crescent" style="width:16px;height:16px;flex-shrink:0;"></ion-spinner>
       <ion-icon *ngIf="addingRoutineId !== r.id" name="add-circle-outline" style="color:#4ade80;font-size:20px;flex-shrink:0;"></ion-icon>

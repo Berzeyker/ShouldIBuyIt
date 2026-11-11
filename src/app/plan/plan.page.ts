@@ -41,7 +41,7 @@ export class PlanPage implements OnInit {
   routines: Routine[] = [];
   week: Record<string, string[]> = {};
   dayNames: Record<string, string> = {
-    1: 'Lunes', 2: 'Martes', 3: 'Miércoles', 4: 'Jueves', 5: 'Viernes', 6: 'Sábado', 7: 'Domingo',
+    1: 'Monday', 2: 'Tuesday', 3: 'Wednesday', 4: 'Thursday', 5: 'Friday', 6: 'Saturday', 7: 'Sunday',
   };
   dayKeys = DAY_KEYS;
   today = 1;
@@ -55,10 +55,10 @@ export class PlanPage implements OnInit {
   loadingStarter: string | null = null;
 
   starterOptions: StarterOption[] = [
-    { id: 'ppl', label: 'Push / Pull / Legs', description: '3 días · empuje, tirón y pierna', days: 3 },
-    { id: 'upper-lower', label: 'Upper / Lower', description: '4 días · torso y pierna alternados', days: 4 },
-    { id: 'full-body', label: 'Full Body', description: '3 días · cuerpo completo', days: 3 },
-    { id: '5x5', label: '5x5 Fuerza', description: '3 días · básicos con barra', days: 3 },
+    { id: 'ppl', label: 'Push / Pull / Legs', description: '3 days · push, pull and legs', days: 3 },
+    { id: 'upper-lower', label: 'Upper / Lower', description: '4 days · alternating upper body and legs', days: 4 },
+    { id: 'full-body', label: 'Full Body', description: '3 days · full body', days: 3 },
+    { id: '5x5', label: '5x5 Strength', description: '3 days · barbell basics', days: 3 },
   ];
 
   constructor(private readonly gymApi: GymApiService, private readonly router: Router) {
@@ -85,7 +85,7 @@ export class PlanPage implements OnInit {
       this.routines = routines;
       this.week = week;
     }).catch((error: any) => {
-      this.errorMessage = error?.error?.message || 'No se pudieron cargar las rutinas.';
+      this.errorMessage = error?.error?.message || 'Could not load the routines.';
     }).finally(() => (this.isLoading = false));
   }
 
@@ -109,7 +109,7 @@ export class PlanPage implements OnInit {
       const { week } = await this.gymApi.saveWeek(this.week);
       this.week = week;
     } catch (error: any) {
-      this.errorMessage = error?.error?.message || 'No se pudo actualizar la semana.';
+      this.errorMessage = error?.error?.message || 'Could not update the week.';
       this.load();
     }
   }
@@ -133,25 +133,25 @@ export class PlanPage implements OnInit {
   async copiarRutina(routine: Routine, event: Event) {
     event.stopPropagation();
     try {
-      const copyName = routine.name.endsWith(')') ? `${routine.name} 2` : `${routine.name} (copia)`;
+      const copyName = routine.name.endsWith(')') ? `${routine.name} 2` : `${routine.name} (copy)`;
       await this.gymApi.createRoutine(copyName, routine.emoji, routine.exercises);
-      this.successMessage = 'Rutina copiada.';
+      this.successMessage = 'Routine duplicated.';
       this.load();
       setTimeout(() => (this.successMessage = ''), 2000);
     } catch (error: any) {
-      this.errorMessage = error?.error?.message || 'No se pudo copiar la rutina.';
+      this.errorMessage = error?.error?.message || 'Could not duplicate the routine.';
     }
   }
 
   async eliminarRutina(routine: Routine, event: Event) {
     event.stopPropagation();
-    const ok = window.confirm(`¿Eliminar la rutina "${routine.name}"? También se quitará del plan semanal.`);
+    const ok = window.confirm(`Delete the routine "${routine.name}"? It will also be removed from the weekly plan.`);
     if (!ok) return;
     try {
       await this.gymApi.deleteRoutine(routine.id);
       this.load();
     } catch (error: any) {
-      this.errorMessage = error?.error?.message || 'No se pudo eliminar la rutina.';
+      this.errorMessage = error?.error?.message || 'Could not delete the routine.';
     }
   }
 
@@ -168,11 +168,11 @@ export class PlanPage implements OnInit {
     try {
       await this.gymApi.loadStarterPlan(planId as any);
       this.starterSheetOpen = false;
-      this.successMessage = 'Plan inicial cargado en tu semana.';
+      this.successMessage = 'Starter plan loaded into your week.';
       this.load();
       setTimeout(() => (this.successMessage = ''), 2500);
     } catch (error: any) {
-      this.errorMessage = error?.error?.message || 'No se pudo cargar el plan.';
+      this.errorMessage = error?.error?.message || 'Could not load the plan.';
     } finally {
       this.loadingStarter = null;
     }
@@ -184,6 +184,6 @@ export class PlanPage implements OnInit {
 
   resumenRutina(routine: Routine): string {
     const sets = routine.exercises.reduce((n, ex) => n + ex.sets, 0);
-    return `${routine.exercises.length} ejercicios · ${sets} series`;
+    return `${routine.exercises.length} exercises · ${sets} sets`;
   }
 }

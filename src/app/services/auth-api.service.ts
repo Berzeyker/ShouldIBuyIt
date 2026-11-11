@@ -54,7 +54,7 @@ export class AuthApiService { // Servicio de autenticación y gestión de usuari
     const password = (data.password ?? '').trim();
 
     if (!username || !password) {
-      throw new Error('El usuario y la contraseña son obligatorios.');
+      throw new Error('Username and password are required.');
     }
 
     try {
@@ -68,7 +68,7 @@ export class AuthApiService { // Servicio de autenticación y gestión de usuari
 
       return this.formatUser(response.user);
     } catch (error: any) {
-      throw new Error(error?.error?.message || 'No se pudo registrar el usuario.');
+      throw new Error(error?.error?.message || 'Could not register the user.');
     }
   }
 
@@ -87,7 +87,7 @@ export class AuthApiService { // Servicio de autenticación y gestión de usuari
       await this.persistSession(user, response.token);
       return user;
     } catch (error: any) {
-      throw new Error(error?.error?.message || 'Usuario o contraseña incorrectos.');
+      throw new Error(error?.error?.message || 'Incorrect username or password.');
     }
   }
 
@@ -106,7 +106,7 @@ export class AuthApiService { // Servicio de autenticación y gestión de usuari
       await this.persistSession(user, response.token);
       return user;
     } catch (error: any) {
-      throw new Error(error?.error?.message || 'No se pudo cambiar de usuario.');
+      throw new Error(error?.error?.message || 'Could not switch user.');
     }
   }
 
@@ -122,7 +122,7 @@ export class AuthApiService { // Servicio de autenticación y gestión de usuari
           })
         );
       } catch (error) {
-        console.warn('No se pudo cerrar la sesión en el backend:', error);
+        console.warn('Could not close the session on the backend:', error);
       }
     }
 

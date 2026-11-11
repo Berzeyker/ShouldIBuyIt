@@ -10,7 +10,7 @@
     <div class="gym-navbar">
       <div class="gym-nav-brand">
         <span>📊</span>
-        <span class="gym-nav-title">Estadísticas</span>
+        <span class="gym-nav-title">Stats</span>
       </div>
       <div class="gym-nav-actions">
         <button class="glass-icon-btn" (click)="refresh()">
@@ -22,8 +22,8 @@
     <div class="gym-container">
 
       <div class="header-section">
-        <span class="glass-badge">Tu progreso</span>
-        <h2>Racha, volumen y récords</h2>
+        <span class="glass-badge">Your progress</span>
+        <h2>Streak, volume and records</h2>
       </div>
 
       <div *ngIf="isLoading" class="empty-state">
@@ -43,20 +43,20 @@
         <div class="glass-card">
           <div class="stats-grid">
             <div class="stat-item">
-              <span class="stat-label">Sesiones</span>
+              <span class="stat-label">Sessions</span>
               <span class="stat-value">{{ summary.totalWorkouts }}</span>
             </div>
             <div class="stat-item">
-              <span class="stat-label">Este mes</span>
+              <span class="stat-label">This month</span>
               <span class="stat-value highlight">{{ summary.thisMonth }}</span>
             </div>
             <div class="stat-item">
-              <span class="stat-label">Vol. mensual</span>
+              <span class="stat-label">Monthly vol.</span>
               <span class="stat-value">{{ summary.monthVolume | number: '1.0-0' }} kg</span>
             </div>
             <div class="stat-item">
-              <span class="stat-label">Racha</span>
-              <span class="stat-value highlight">{{ summary.streakWeeks }} sem</span>
+              <span class="stat-label">Streak</span>
+              <span class="stat-value highlight">{{ summary.streakWeeks }} wk</span>
             </div>
           </div>
         </div>
@@ -65,7 +65,7 @@
         <div class="glass-card">
           <div class="card-title">
             <ion-icon name="bar-chart-outline" class="icon" style="color: #60a5fa;"></ion-icon>
-            <h3>Volumen (12 semanas)</h3>
+            <h3>Volume (12 weeks)</h3>
           </div>
           <div class="volume-chart">
             <div class="volume-col" *ngFor="let w of summary.weeklyVolume">
@@ -77,7 +77,7 @@
             </div>
           </div>
           <p class="text-muted" style="margin:10px 0 0 0;">
-            Volumen = peso × repeticiones de las series de trabajo.
+            Volume = weight × reps of your work sets.
           </p>
         </div>
 
@@ -85,11 +85,11 @@
         <div class="glass-card">
           <div class="card-title">
             <ion-icon name="ribbon-outline" class="icon" style="color: #fbbf24;"></ion-icon>
-            <h3>Récords personales</h3>
+            <h3>Personal records</h3>
           </div>
           <div *ngIf="summary.prs.length === 0" class="empty-state">
             <ion-icon name="ribbon-outline" class="empty-icon"></ion-icon>
-            <p>Registra series con peso para ver tus PRs aquí.</p>
+            <p>Log weighted sets to see your PRs here.</p>
           </div>
           <div class="pr-row" *ngFor="let pr of summary.prs.slice(0, 8)">
             <div class="glass-row-main">
@@ -104,7 +104,7 @@
         <div class="glass-card">
           <div class="card-title">
             <ion-icon name="scale-outline" class="icon" style="color: #4ade80;"></ion-icon>
-            <h3>Peso corporal</h3>
+            <h3>Body weight</h3>
           </div>
 
           <div *ngIf="summary.bodyweightSeries.length > 1" class="bw-chart">
@@ -122,11 +122,11 @@
           </div>
 
           <div class="bw-save-row">
-            <input class="glass-input" type="number" step="0.1" min="0" placeholder="Peso de hoy (kg)"
+            <input class="glass-input" type="number" step="0.1" min="0" placeholder="Today's weight (kg)"
                    [(ngModel)]="weightInput">
             <button class="glass-btn glass-btn-sm" (click)="saveWeight()" [disabled]="isSavingWeight">
               <span *ngIf="!isSavingWeight" style="display:flex;align-items:center;gap:4px;">
-                <ion-icon name="checkmark-outline"></ion-icon> Guardar
+                <ion-icon name="checkmark-outline"></ion-icon> Save
               </span>
               <ion-spinner *ngIf="isSavingWeight" name="crescent" style="width:14px;height:14px;"></ion-spinner>
             </button>
@@ -145,14 +145,14 @@
         <div class="glass-card">
           <div class="card-title">
             <ion-icon name="calendar-outline" class="icon" style="color: #60a5fa;"></ion-icon>
-            <h3>Últimas sesiones</h3>
+            <h3>Recent sessions</h3>
           </div>
 
           <div *ngIf="recentWorkouts.length === 0" class="empty-state">
             <ion-icon name="barbell-outline" class="empty-icon"></ion-icon>
-            <p>Aún no hay sesiones terminadas.</p>
+            <p>No finished sessions yet.</p>
             <button class="glass-btn glass-btn-sm" style="margin-top:8px;" (click)="irASesion()">
-              <ion-icon name="play-outline"></ion-icon> Empezar ahora
+              <ion-icon name="play-outline"></ion-icon> Start now
             </button>
           </div>
 
@@ -162,7 +162,7 @@
                 <span class="glass-row-title">{{ w.name }}</span>
                 <span class="glass-row-sub">
                   {{ fmtDate(w.finishedAt || w.startedAt) }} · {{ fmtDuration(w.durationSec) }}
-                  · {{ workoutSets(w) }} series · {{ workoutVolume(w) | number: '1.0-0' }} kg
+                  · {{ workoutSets(w) }} sets · {{ workoutVolume(w) | number: '1.0-0' }} kg
                 </span>
               </div>
               <ion-icon [name]="expandedWorkout === w.id ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
@@ -173,14 +173,14 @@
                 <div class="wo-entry-head">
                   <span class="wo-entry-name">{{ en.name }}</span>
                   <span class="wo-entry-rows" *ngIf="workRows(en).length">
-                    {{ workRows(en).length }} series
+                    {{ workRows(en).length }} sets
                   </span>
                 </div>
                 <div class="wo-set" *ngFor="let row of workRows(en)">
                   {{ row.w }} kg × {{ row.r }}
                 </div>
                 <p class="text-muted" *ngIf="workRows(en).length === 0" style="margin:2px 0 0 0;">
-                  Sin series registradas
+                  No sets logged
                 </p>
               </div>
             </div>

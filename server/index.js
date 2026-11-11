@@ -16,15 +16,15 @@ const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 app.use(cors());
 app.use(express.json());
 
-// Media del catálogo openGym (imágenes webp y clips mp4)
+// openGym catalog media (webp images and mp4 clips)
 app.use('/ex', express.static(path.join(__dirname, 'public', 'ex'), { maxAge: '30d' }));
 
-// Rutas de gym: catálogo y auth son públicos; el resto requiere sesión
+// Gym routes: catalog and auth are public; the rest require a session
 app.use('/api', (req, res, next) => {
   const p = req.path;
-  // Los datos autenticados son específicos de cada usuario: no permitir caché
-  // por URL (Chromium ignora Authorization al cachear GETs y podría servir
-  // respuestas de otra sesión vía 304). El catálogo sí es público y cacheable.
+  // Authenticated data is specific to each user: do not allow URL caching
+  // (Chromium ignores Authorization when caching GETs and could serve
+  // another session's response via 304). The catalog is public and cacheable.
   if (!p.startsWith('/catalog')) res.set('Cache-Control', 'no-store');
   if (p.startsWith('/catalog') || p.startsWith('/auth') || p === '/health') return next();
   return authMiddleware(req, res, next);
@@ -110,29 +110,29 @@ async function authMiddleware(req, res, next) {
   try {
     const token = getTokenFromHeader(req);
     if (!token) {
-      return res.status(401).json({ message: 'No autorizado: token requerido.' });
+      return res.status(401).json({ message: 'Unauthorized: token required.' });
     }
 
     const decoded = jwt.verify(token, JWT_SECRET);
     const userId = await validateSessionToken(token);
 
     if (!userId || decoded.id !== userId) {
-      return res.status(401).json({ message: 'Sesión inválida o expirada.' });
+      return res.status(401).json({ message: 'Invalid or expired session.' });
     }
 
     req.user = { id: decoded.id, username: decoded.username };
     next();
   } catch (error) {
-    return res.status(401).json({ message: 'Token inválido.', error: error.message });
+    return res.status(401).json({ message: 'Invalid token.', error: error.message });
   }
 }
 
 app.get('/api/health', async (req, res) => {
   try {
     await pool.query('SELECT 1');
-    res.json({ ok: true, message: 'API saludable y conectada a Neon' });
+    res.json({ ok: true, message: 'API healthy and connected to Neon' });
   } catch (error) {
-    res.status(500).json({ ok: false, message: 'No se pudo conectar a la base de datos', error: error.message });
+    res.status(500).json({ ok: false, message: 'Could not connect to the database', error: error.message });
   }
 });
 
@@ -143,7 +143,7 @@ app.post('/api/auth/register', async (req, res) => {
     const email = String(req.body?.email || '').trim();
 
     if (!username || !password) {
-      return res.status(400).json({ message: 'Usuario y contraseña requeridos.' });
+      return res.status(400).json({ message: 'Username and password are required.' });
     }
 
     await ensureSchema();
@@ -154,7 +154,7 @@ app.post('/api/auth/register', async (req, res) => {
     );
 
     if (existing.rows.length > 0) {
-      return res.status(409).json({ message: 'Este usuario ya existe.' });
+      return res.status(409).json({ message: 'This username already exists.' });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
@@ -172,7 +172,7 @@ app.post('/api/auth/register', async (req, res) => {
     await saveSession(user.id, token);
 
     return res.status(201).json({
-      message: 'Usuario registrado correctamente.',
+      message: 'User registered successfully.',
       token,
       user: {
         id: user.id,
@@ -182,7 +182,7 @@ app.post('/api/auth/register', async (req, res) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({ message: 'Error registrando usuario.', error: error.message });
+    return res.status(500).json({ message: 'Error registering user.', error: error.message });
   }
 });
 
@@ -192,7 +192,7 @@ app.post('/api/auth/login', async (req, res) => {
     const password = String(req.body?.password || '').trim();
 
     if (!username || !password) {
-      return res.status(400).json({ message: 'Usuario y contraseña requeridos.' });
+      return res.status(400).json({ message: 'Username and password are required.' });
     }
 
     await ensureSchema();
@@ -203,21 +203,21 @@ app.post('/api/auth/login', async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(401).json({ message: 'Usuario o contraseña incorrectos.' });
+      return res.status(401).json({ message: 'Incorrect username or password.' });
     }
 
     const user = result.rows[0];
     const isValid = await bcrypt.compare(password, user.password_hash); //password validation
 
     if (!isValid) {
-      return res.status(401).json({ message: 'Usuario o contraseña incorrectos.' });
+      return res.status(401).json({ message: 'Incorrect username or password.' });
     }
 
     const token = createToken(user);
     await saveSession(user.id, token);
 
     return res.json({
-      message: 'Inicio de sesión exitoso.',
+      message: 'Signed in successfully.',
       token,
       user: {
         id: user.id,
@@ -227,7 +227,7 @@ app.post('/api/auth/login', async (req, res) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({ message: 'Error iniciando sesión.', error: error.message });
+    return res.status(500).json({ message: 'Error signing in.', error: error.message });
   }
 });
 
@@ -245,7 +245,7 @@ app.get('/api/auth/users', async (req, res) => {
       createdAt: user.created_at,
     })) });
   } catch (error) {
-    res.status(500).json({ message: 'Error listando usuarios.', error: error.message });
+    res.status(500).json({ message: 'Error listing users.', error: error.message });
   }
 });
 
@@ -257,12 +257,12 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
     );
 
     if (user.rows.length === 0) {
-      return res.status(404).json({ message: 'Usuario no encontrado.' });
+      return res.status(404).json({ message: 'User not found.' });
     }
 
     return res.json({ user: user.rows[0] });
   } catch (error) {
-    return res.status(500).json({ message: 'Error obteniendo usuario actual.', error: error.message });
+    return res.status(500).json({ message: 'Error getting the current user.', error: error.message });
   }
 });
 
@@ -270,9 +270,9 @@ app.post('/api/auth/logout', authMiddleware, async (req, res) => {
   try {
     const token = getTokenFromHeader(req);
     await revokeSession(token);
-    return res.json({ ok: true, message: 'Sesión cerrada correctamente.' });
+    return res.json({ ok: true, message: 'Session closed successfully.' });
   } catch (error) {
-    return res.status(500).json({ message: 'No se pudo cerrar la sesión.', error: error.message });
+    return res.status(500).json({ message: 'Could not close the session.', error: error.message });
   }
 });
 
@@ -282,7 +282,7 @@ app.post('/api/auth/switch-user', async (req, res) => {
     const password = String(req.body?.password || '').trim();
 
     if (!username || !password) {
-      return res.status(400).json({ message: 'Usuario y contraseña requeridos para cambiar de cuenta.' });
+      return res.status(400).json({ message: 'Username and password are required to switch accounts.' });
     }
 
     await ensureSchema();
@@ -293,14 +293,14 @@ app.post('/api/auth/switch-user', async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Usuario no encontrado.' });
+      return res.status(404).json({ message: 'User not found.' });
     }
 
     const user = result.rows[0];
     const isValid = await bcrypt.compare(password, user.password_hash);
 
     if (!isValid) {
-      return res.status(401).json({ message: 'La contraseña es incorrecta.' });
+      return res.status(401).json({ message: 'The password is incorrect.' });
     }
 
     const token = createToken(user);
@@ -316,7 +316,7 @@ app.post('/api/auth/switch-user', async (req, res) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({ message: 'Error cambiando de usuario.', error: error.message });
+    return res.status(500).json({ message: 'Error switching user.', error: error.message });
   }
 });
 
@@ -360,23 +360,23 @@ function readExerciseInput(body, { partial = false } = {}) {
     }
     const value = body?.[field];
     if (typeof value !== 'string') {
-      return { error: `El campo ${field} debe ser texto.` };
+      return { error: `The field ${field} must be text.` };
     }
     const normalizedValue = value.trim();
     if (maxLengths[field] && normalizedValue.length > maxLengths[field]) {
-      return { error: `El campo ${field} supera el máximo de ${maxLengths[field]} caracteres.` };
+      return { error: `The field ${field} exceeds the maximum of ${maxLengths[field]} characters.` };
     }
     input[column] = normalizedValue;
   }
 
   if (!partial && !Object.hasOwn(input, 'name')) {
-    return { error: 'El nombre del ejercicio es obligatorio.' };
+    return { error: 'The exercise name is required.' };
   }
   if (Object.hasOwn(input, 'name') && !input.name) {
-    return { error: 'El nombre del ejercicio es obligatorio.' };
+    return { error: 'The exercise name is required.' };
   }
   if (Object.keys(input).length === 0) {
-    return { error: 'Indica al menos un campo para actualizar.' };
+    return { error: 'Provide at least one field to update.' };
   }
 
   return { input };
@@ -388,8 +388,8 @@ app.get('/api/exercises', async (req, res) => {
     const result = await pool.query(`${exerciseSelect} ORDER BY created_at DESC`);
     return res.json({ exercises: result.rows.map(serializeExercise) });
   } catch (error) {
-    console.error('Error listando ejercicios:', error);
-    return res.status(500).json({ message: 'No se pudieron cargar los ejercicios.' });
+    console.error('Error listing exercises:', error);
+    return res.status(500).json({ message: 'Could not load exercises.' });
   }
 });
 
@@ -407,18 +407,18 @@ app.post('/api/exercises', async (req, res) => {
       [input.name, input.muscle_group, input.equipment, input.notes]
     );
     return res.status(201).json({
-      message: 'Ejercicio creado correctamente.',
+      message: 'Exercise created successfully.',
       exercise: serializeExercise(result.rows[0]),
     });
   } catch (error) {
-    console.error('Error creando ejercicio:', error);
-    return res.status(500).json({ message: 'No se pudo crear el ejercicio.' });
+    console.error('Error creating exercise:', error);
+    return res.status(500).json({ message: 'Could not create the exercise.' });
   }
 });
 
 async function updateExercise(req, res, { partial = false } = {}) {
   if (!isValidExerciseId(req.params.id)) {
-    return res.status(400).json({ message: 'El identificador del ejercicio no es válido.' });
+    return res.status(400).json({ message: 'The exercise identifier is not valid.' });
   }
 
   const { input, error } = readExerciseInput(req.body, { partial });
@@ -440,15 +440,15 @@ async function updateExercise(req, res, { partial = false } = {}) {
       values
     );
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'No se encontró el ejercicio.' });
+      return res.status(404).json({ message: 'Exercise not found.' });
     }
     return res.json({
-      message: 'Ejercicio actualizado correctamente.',
+      message: 'Exercise updated successfully.',
       exercise: serializeExercise(result.rows[0]),
     });
   } catch (error) {
-    console.error('Error actualizando ejercicio:', error);
-    return res.status(500).json({ message: 'No se pudo actualizar el ejercicio.' });
+    console.error('Error updating exercise:', error);
+    return res.status(500).json({ message: 'Could not update the exercise.' });
   }
 }
 
@@ -457,7 +457,7 @@ app.patch('/api/exercises/:id', (req, res) => updateExercise(req, res, { partial
 
 app.delete('/api/exercises/:id', async (req, res) => {
   if (!isValidExerciseId(req.params.id)) {
-    return res.status(400).json({ message: 'El identificador del ejercicio no es válido.' });
+    return res.status(400).json({ message: 'The exercise identifier is not valid.' });
   }
 
   try {
@@ -467,15 +467,15 @@ app.delete('/api/exercises/:id', async (req, res) => {
       [req.params.id]
     );
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'No se encontró el ejercicio.' });
+      return res.status(404).json({ message: 'Exercise not found.' });
     }
     return res.json({
       id: result.rows[0].id,
-      message: 'Ejercicio eliminado correctamente.',
+      message: 'Exercise deleted successfully.',
     });
   } catch (error) {
-    console.error('Error eliminando ejercicio:', error);
-    return res.status(500).json({ message: 'No se pudo eliminar el ejercicio.' });
+    console.error('Error deleting exercise:', error);
+    return res.status(500).json({ message: 'Could not delete the exercise.' });
   }
 });
 

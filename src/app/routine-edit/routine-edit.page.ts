@@ -66,9 +66,9 @@ export class RoutineEditPage implements OnInit {
           this.emoji = found.emoji || '💪';
           this.exercises = found.exercises.map((ex) => ({ ...ex }));
         } else {
-          this.errorMessage = 'Rutina no encontrada.';
+          this.errorMessage = 'Routine not found.';
         }
-      }).catch(() => (this.errorMessage = 'No se pudo cargar la rutina.'))
+      }).catch(() => (this.errorMessage = 'Could not load the routine.'))
         .finally(() => (this.isLoading = false));
     }
   }
@@ -128,11 +128,11 @@ export class RoutineEditPage implements OnInit {
   async save() {
     const trimmed = this.name.trim();
     if (!trimmed) {
-      this.errorMessage = 'Ponle un nombre a la rutina.';
+      this.errorMessage = 'Give the routine a name.';
       return;
     }
     if (this.exercises.length === 0) {
-      this.errorMessage = 'Añade al menos un ejercicio.';
+      this.errorMessage = 'Add at least one exercise.';
       return;
     }
     this.isSaving = true;
@@ -145,7 +145,7 @@ export class RoutineEditPage implements OnInit {
       }
       this.router.navigateByUrl('/tabs/plan');
     } catch (error: any) {
-      this.errorMessage = error?.error?.message || 'No se pudo guardar la rutina.';
+      this.errorMessage = error?.error?.message || 'Could not save the routine.';
     } finally {
       this.isSaving = false;
     }

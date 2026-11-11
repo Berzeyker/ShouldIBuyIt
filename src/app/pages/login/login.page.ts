@@ -20,7 +20,7 @@ export class LoginPage implements OnInit, AfterViewInit {
   password: string = '';
   errorMessage: string = '';
   availableUsers: any[] = [];
-  sessionStatus: string = 'Sin sesión activa';
+  sessionStatus: string = 'No active session';
 
   private sileo = inject(Sileo);
 
@@ -43,17 +43,17 @@ export class LoginPage implements OnInit, AfterViewInit {
       this.availableUsers = await this.authApiService.getUsers();
       this.updateSessionStatus();
     } catch (error) {
-      console.error('Error cargando usuarios:', error);
+      console.error('Error loading users:', error);
     }
   }
 
   updateSessionStatus() {
     if (!this.username) {
-      this.sessionStatus = 'Sin sesión activa';
+      this.sessionStatus = 'No active session';
       return;
     }
 
-    this.sessionStatus = `Cuenta seleccionada: ${this.username}`;
+    this.sessionStatus = `Selected account: ${this.username}`;
   }
 
   initBounceAnimation() {
@@ -74,7 +74,7 @@ export class LoginPage implements OnInit, AfterViewInit {
     this.errorMessage = '';
 
     if (!this.username || !this.password) {
-      this.sileo.warning({ title: 'Campos vacíos', description: 'Por favor, completa todos los campos.' });
+      this.sileo.warning({ title: 'Empty fields', description: 'Please fill in all fields.' });
       return;
     }
 
@@ -82,9 +82,9 @@ export class LoginPage implements OnInit, AfterViewInit {
       const usuario = await this.authApiService.login(this.username, this.password);
       this.availableUsers = await this.authApiService.getUsers();
       this.password = '';
-      this.sessionStatus = `Sesión activa para ${usuario.username}`;
+      this.sessionStatus = `Active session for ${usuario.username}`;
 
-      this.sileo.success({ title: '¡Bienvenido!', description: `Sesión iniciada para ${usuario.username}.` });
+      this.sileo.success({ title: 'Welcome!', description: `Signed in as ${usuario.username}.` });
 
       if (document.activeElement instanceof HTMLElement) {
         document.activeElement.blur();
@@ -94,14 +94,14 @@ export class LoginPage implements OnInit, AfterViewInit {
         this.router.navigateByUrl('/tabs/home');
       }, 800);
     } catch (error: any) {
-      console.error('Error al iniciar sesión:', error);
-      this.sileo.error({ title: 'Acceso denegado', description: error?.message || 'Usuario o contraseña incorrectos.' });
+      console.error('Error signing in:', error);
+      this.sileo.error({ title: 'Access denied', description: error?.message || 'Incorrect username or password.' });
     }
   }
 
   async onRegister() {
     if (!this.username || !this.password) {
-      this.sileo.warning({ title: 'Atención', description: 'Escribe un usuario y contraseña para registrarte.' });
+      this.sileo.warning({ title: 'Heads up', description: 'Enter a username and password to sign up.' });
       return;
     }
 
@@ -112,16 +112,16 @@ export class LoginPage implements OnInit, AfterViewInit {
       });
 
       this.availableUsers = await this.authApiService.getUsers();
-      this.sessionStatus = 'Cuenta creada. Inicia sesión con tu contraseña.';
+      this.sessionStatus = 'Account created. Sign in with your password.';
       this.sileo.success({
-        title: 'Usuario registrado',
-        description: `Se creó ${nuevoUsuario.username}. Ahora inicia sesión con tu contraseña.`
+        title: 'User registered',
+        description: `${nuevoUsuario.username} was created. Now sign in with your password.`
       });
       this.username = '';
       this.password = '';
     } catch (error: any) {
-      console.error('Error al registrar usuario:', error);
-      this.sileo.error({ title: 'Error', description: error?.message || 'No se pudo completar el registro.' });
+      console.error('Error registering user:', error);
+      this.sileo.error({ title: 'Error', description: error?.message || 'Could not complete the registration.' });
     }
   }
 
@@ -130,8 +130,8 @@ export class LoginPage implements OnInit, AfterViewInit {
     this.password = '';
     this.updateSessionStatus();
     this.sileo.info({
-      title: 'Cambio de usuario',
-      description: 'Escribe la contraseña para acceder a esta cuenta.'
+      title: 'Switching user',
+      description: 'Enter the password to access this account.'
     });
   }
 }

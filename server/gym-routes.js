@@ -1,5 +1,5 @@
-// Rutas de openGym integradas: catálogo de ejercicios, rutinas, plan semanal,
-// sesiones de entrenamiento, peso corporal y estadísticas. Todo persiste en Neon.
+// Integrated openGym routes: exercise catalog, routines, weekly plan,
+// training sessions, body weight and stats. Everything persists in Neon.
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
@@ -10,11 +10,11 @@ const { pool } = require('./db');
 const router = express.Router();
 
 const CATALOG_FILE = path.join(__dirname, 'data', 'catalog.json');
-const DAY_NAMES = { 1: 'Lunes', 2: 'Martes', 3: 'Miércoles', 4: 'Jueves', 5: 'Viernes', 6: 'Sábado', 7: 'Domingo' };
-const DAY_SHORT = { 1: 'Lun', 2: 'Mar', 3: 'Mié', 4: 'Jue', 5: 'Vie', 6: 'Sáb', 7: 'Dom' };
+const DAY_NAMES = { 1: 'Monday', 2: 'Tuesday', 3: 'Wednesday', 4: 'Thursday', 5: 'Friday', 6: 'Saturday', 7: 'Sunday' };
+const DAY_SHORT = { 1: 'Mon', 2: 'Tue', 3: 'Wed', 4: 'Thu', 5: 'Fri', 6: 'Sat', 7: 'Sun' };
 
 // ---------------------------------------------------------------------------
-// Esquema
+// Schema
 // ---------------------------------------------------------------------------
 
 async function ensureGymSchema() {
@@ -96,7 +96,7 @@ async function seedCatalogOnce() {
     return;
   }
   if (!fs.existsSync(CATALOG_FILE)) {
-    console.warn('catalog.json no existe: ejecuta node scripts/build-catalog.mjs <clon-opengym>');
+    console.warn('catalog.json is missing: run node scripts/build-catalog.mjs <opengym-clone>');
     return;
   }
   const catalog = JSON.parse(fs.readFileSync(CATALOG_FILE, 'utf8'));
@@ -131,7 +131,7 @@ async function seedCatalogOnce() {
           params
         );
       }
-      console.log(`Catálogo seeded: ${catalog.length} ejercicios`);
+      console.log(`Catalog seeded: ${catalog.length} exercises`);
     }
     await client.query('COMMIT');
   } catch (error) {
@@ -149,7 +149,7 @@ async function gymReady() {
 }
 
 // ---------------------------------------------------------------------------
-// Serializadores
+// Serializers
 // ---------------------------------------------------------------------------
 
 const CATALOG_SELECT = `
@@ -252,7 +252,7 @@ function sanitizeEntries(entries) {
 }
 
 // ---------------------------------------------------------------------------
-// Catálogo (público: datos de referencia)
+// Catalog (public: reference data)
 // ---------------------------------------------------------------------------
 
 router.get('/catalog/meta', async (req, res) => {
@@ -273,7 +273,7 @@ router.get('/catalog/meta', async (req, res) => {
       dayShort: DAY_SHORT,
     });
   } catch (error) {
-    res.status(500).json({ message: 'No se pudo cargar el catálogo.', error: error.message });
+    res.status(500).json({ message: 'Could not load the catalog.', error: error.message });
   }
 });
 
@@ -290,7 +290,7 @@ router.get('/catalog/search', async (req, res) => {
     const where = [];
     const params = [];
     if (q) {
-      // Búsqueda por palabras: todas deben aparecer (como openGym).
+      // Word search: every term must appear (like openGym).
       const terms = q.split(/\s+/).filter(Boolean).slice(0, 6);
       for (const term of terms) {
         params.push(`%${term}%`);
@@ -310,7 +310,7 @@ router.get('/catalog/search', async (req, res) => {
     );
     res.json({ total: total.rows[0].n, exercises: rows.rows.map(serializeCatalogRow) });
   } catch (error) {
-    res.status(500).json({ message: 'Error buscando ejercicios.', error: error.message });
+    res.status(500).json({ message: 'Error searching exercises.', error: error.message });
   }
 });
 
@@ -324,7 +324,7 @@ router.get('/catalog/bulk', async (req, res) => {
     rows.rows.forEach((r) => { map[r.id] = serializeCatalogRow(r); });
     res.json({ exercises: map });
   } catch (error) {
-    res.status(500).json({ message: 'Error cargando ejercicios.', error: error.message });
+    res.status(500).json({ message: 'Error loading exercises.', error: error.message });
   }
 });
 
@@ -332,15 +332,15 @@ router.get('/catalog/:id', async (req, res) => {
   try {
     await gymReady();
     const rows = await pool.query(`${CATALOG_SELECT} WHERE id = $1`, [req.params.id]);
-    if (!rows.rows.length) return res.status(404).json({ message: 'Ejercicio no encontrado.' });
+    if (!rows.rows.length) return res.status(404).json({ message: 'Exercise not found.' });
     res.json({ exercise: serializeCatalogRow(rows.rows[0]) });
   } catch (error) {
-    res.status(500).json({ message: 'Error cargando el ejercicio.', error: error.message });
+    res.status(500).json({ message: 'Error loading the exercise.', error: error.message });
   }
 });
 
 // ---------------------------------------------------------------------------
-// Rutinas
+// Routines
 // ---------------------------------------------------------------------------
 
 router.get('/routines', async (req, res) => {
@@ -364,7 +364,7 @@ router.get('/routines', async (req, res) => {
     });
     res.json({ routines: routines.rows.map(serializeRoutine), week: weekMap });
   } catch (error) {
-    res.status(500).json({ message: 'No se pudieron cargar las rutinas.', error: error.message });
+    res.status(500).json({ message: 'Could not load routines.', error: error.message });
   }
 });
 
@@ -372,7 +372,7 @@ router.post('/routines', async (req, res) => {
   try {
     await gymReady();
     const name = String(req.body?.name || '').trim().slice(0, 120);
-    if (!name) return res.status(400).json({ message: 'La rutina necesita un nombre.' });
+    if (!name) return res.status(400).json({ message: 'The routine needs a name.' });
     const emoji = String(req.body?.emoji || '💪').slice(0, 8) || '💪';
     const exercises = sanitizeRoutineExercises(req.body?.exercises);
     const result = await pool.query(
@@ -381,9 +381,9 @@ router.post('/routines', async (req, res) => {
        RETURNING id, name, emoji, exercises, created_at AS "createdAt", updated_at AS "updatedAt"`,
       [req.user.id, name, emoji, JSON.stringify(exercises)]
     );
-    res.status(201).json({ message: 'Rutina creada.', routine: serializeRoutine(result.rows[0]) });
+    res.status(201).json({ message: 'Routine created.', routine: serializeRoutine(result.rows[0]) });
   } catch (error) {
-    res.status(500).json({ message: 'No se pudo crear la rutina.', error: error.message });
+    res.status(500).json({ message: 'Could not create the routine.', error: error.message });
   }
 });
 
@@ -400,10 +400,10 @@ router.get('/routines/:id', async (req, res) => {
   try {
     await gymReady();
     const routine = await loadOwnRoutine(req.user.id, req.params.id);
-    if (!routine) return res.status(404).json({ message: 'Rutina no encontrada.' });
+    if (!routine) return res.status(404).json({ message: 'Routine not found.' });
     res.json({ routine });
   } catch (error) {
-    res.status(500).json({ message: 'No se pudo cargar la rutina.', error: error.message });
+    res.status(500).json({ message: 'Could not load the routine.', error: error.message });
   }
 });
 
@@ -411,9 +411,9 @@ router.put('/routines/:id', async (req, res) => {
   try {
     await gymReady();
     const existing = await loadOwnRoutine(req.user.id, req.params.id);
-    if (!existing) return res.status(404).json({ message: 'Rutina no encontrada.' });
+    if (!existing) return res.status(404).json({ message: 'Routine not found.' });
     const name = req.body?.name !== undefined ? String(req.body.name).trim().slice(0, 120) : existing.name;
-    if (!name) return res.status(400).json({ message: 'La rutina necesita un nombre.' });
+    if (!name) return res.status(400).json({ message: 'The routine needs a name.' });
     const emoji = req.body?.emoji !== undefined ? String(req.body.emoji).slice(0, 8) : existing.emoji;
     const exercises = req.body?.exercises !== undefined ? sanitizeRoutineExercises(req.body.exercises) : existing.exercises;
     const result = await pool.query(
@@ -422,9 +422,9 @@ router.put('/routines/:id', async (req, res) => {
        RETURNING id, name, emoji, exercises, created_at AS "createdAt", updated_at AS "updatedAt"`,
       [req.params.id, req.user.id, name, emoji, JSON.stringify(exercises)]
     );
-    res.json({ message: 'Rutina actualizada.', routine: serializeRoutine(result.rows[0]) });
+    res.json({ message: 'Routine updated.', routine: serializeRoutine(result.rows[0]) });
   } catch (error) {
-    res.status(500).json({ message: 'No se pudo actualizar la rutina.', error: error.message });
+    res.status(500).json({ message: 'Could not update the routine.', error: error.message });
   }
 });
 
@@ -434,15 +434,15 @@ router.delete('/routines/:id', async (req, res) => {
     const result = await pool.query('DELETE FROM user_routines WHERE id = $1 AND user_id = $2 RETURNING id', [
       req.params.id, req.user.id,
     ]);
-    if (!result.rows.length) return res.status(404).json({ message: 'Rutina no encontrada.' });
-    res.json({ id: result.rows[0].id, message: 'Rutina eliminada.' });
+    if (!result.rows.length) return res.status(404).json({ message: 'Routine not found.' });
+    res.json({ id: result.rows[0].id, message: 'Routine deleted.' });
   } catch (error) {
-    res.status(500).json({ message: 'No se pudo eliminar la rutina.', error: error.message });
+    res.status(500).json({ message: 'Could not delete the routine.', error: error.message });
   }
 });
 
 // ---------------------------------------------------------------------------
-// Plan semanal
+// Weekly plan
 // ---------------------------------------------------------------------------
 
 router.get('/week', async (req, res) => {
@@ -459,7 +459,7 @@ router.get('/week', async (req, res) => {
     });
     res.json({ week, dayNames: DAY_NAMES });
   } catch (error) {
-    res.status(500).json({ message: 'No se pudo cargar la semana.', error: error.message });
+    res.status(500).json({ message: 'Could not load the week.', error: error.message });
   }
 });
 
@@ -468,7 +468,7 @@ router.put('/week', async (req, res) => {
     await gymReady();
     const week = req.body?.week;
     if (!week || typeof week !== 'object' || Array.isArray(week)) {
-      return res.status(400).json({ message: 'Formato de semana inválido.' });
+      return res.status(400).json({ message: 'Invalid week format.' });
     }
     const client = await pool.connect();
     try {
@@ -507,14 +507,14 @@ router.put('/week', async (req, res) => {
       out[r.day] = out[r.day] || [];
       out[r.day].push(r.routineId);
     });
-    res.json({ week: out, message: 'Semana guardada.' });
+    res.json({ week: out, message: 'Week saved.' });
   } catch (error) {
-    res.status(500).json({ message: 'No se pudo guardar la semana.', error: error.message });
+    res.status(500).json({ message: 'Could not save the week.', error: error.message });
   }
 });
 
 // ---------------------------------------------------------------------------
-// Planes iniciales (portados de openGym lib/starter.js)
+// Starter plans (ported from openGym lib/starter.js)
 // ---------------------------------------------------------------------------
 
 const STARTER_ROUTINES = {
@@ -559,7 +559,7 @@ router.get('/week/starter-options', async (req, res) => {
       })),
     });
   } catch (error) {
-    res.status(500).json({ message: 'No se pudieron cargar los planes.', error: error.message });
+    res.status(500).json({ message: 'Could not load the plans.', error: error.message });
   }
 });
 
@@ -569,9 +569,9 @@ router.post('/week/starter', async (req, res) => {
     const planId = String(req.body?.plan || '').trim();
     const source = STARTER_ROUTINES[planId];
     const schedule = STARTER_SCHEDULES[planId];
-    if (!source || !schedule) return res.status(400).json({ message: 'Plan inicial desconocido.' });
+    if (!source || !schedule) return res.status(400).json({ message: 'Unknown starter plan.' });
 
-    // Nombres de ejercicio para el snapshot
+    // Exercise names for the snapshot
     const allIds = source.flatMap(([, , , list]) => list.map(([id]) => id));
     const catalogRows = await pool.query(`${CATALOG_SELECT} WHERE id = ANY($1::varchar[])`, [allIds]);
     const nameOf = {};
@@ -593,7 +593,7 @@ router.post('/week/starter', async (req, res) => {
         );
         created.push(serializeRoutine(result.rows[0]));
       }
-      // El plan reclama sus días (como openGym: los días del schedule se sustituyen)
+      // The plan claims its days (like openGym: scheduled days are replaced)
       for (const [day] of schedule) {
         await client.query('DELETE FROM user_week WHERE user_id = $1 AND day = $2', [req.user.id, day]);
       }
@@ -611,17 +611,17 @@ router.post('/week/starter', async (req, res) => {
     } finally {
       client.release();
     }
-    res.status(201).json({ message: 'Plan inicial cargado.', routines: created, schedule });
+    res.status(201).json({ message: 'Starter plan loaded.', routines: created, schedule });
   } catch (error) {
-    res.status(500).json({ message: 'No se pudo cargar el plan inicial.', error: error.message });
+    res.status(500).json({ message: 'Could not load the starter plan.', error: error.message });
   }
 });
 
 // ---------------------------------------------------------------------------
-// Entrenamientos (sesiones)
+// Workouts (sessions)
 // ---------------------------------------------------------------------------
 
-// Última sesión de cada ejercicio: para pre-rellenar pesos como openGym.
+// Last session for each exercise: to pre-fill weights like openGym.
 async function lastPerformanceMap(userId, exIds) {
   if (!exIds.length) return {};
   const rows = await pool.query(
@@ -652,7 +652,7 @@ router.get('/workouts/active', async (req, res) => {
     );
     res.json({ workout: rows.rows[0] ? serializeWorkout(rows.rows[0]) : null });
   } catch (error) {
-    res.status(500).json({ message: 'No se pudo cargar la sesión activa.', error: error.message });
+    res.status(500).json({ message: 'Could not load the active session.', error: error.message });
   }
 });
 
@@ -670,29 +670,29 @@ router.get('/workouts', async (req, res) => {
     ]);
     res.json({ workouts: rows.rows.map(serializeWorkout), total: total.rows[0].n });
   } catch (error) {
-    res.status(500).json({ message: 'No se pudo cargar el historial.', error: error.message });
+    res.status(500).json({ message: 'Could not load the history.', error: error.message });
   }
 });
 
 router.post('/workouts', async (req, res) => {
   try {
     await gymReady();
-    // Evita dos sesiones activas a la vez (como openGym, que arranca la de hoy)
+    // Prevent two active sessions at once (like openGym, which starts today's)
     const existing = await pool.query(
       `${WORKOUT_SELECT} WHERE user_id = $1 AND state = 'active' ORDER BY started_at DESC LIMIT 1`,
       [req.user.id]
     );
     if (existing.rows.length) {
-      return res.status(409).json({ message: 'Ya tienes una sesión en curso.', workout: serializeWorkout(existing.rows[0]) });
+      return res.status(409).json({ message: 'You already have a session in progress.', workout: serializeWorkout(existing.rows[0]) });
     }
 
     const routineId = typeof req.body?.routineId === 'string' && req.body.routineId ? req.body.routineId : null;
-    let name = 'Sesión libre';
+    let name = 'Free session';
     let entries = [];
 
     if (routineId) {
       const routine = await loadOwnRoutine(req.user.id, routineId);
-      if (!routine) return res.status(404).json({ message: 'Rutina no encontrada.' });
+      if (!routine) return res.status(404).json({ message: 'Routine not found.' });
       name = routine.name;
       const last = await lastPerformanceMap(req.user.id, routine.exercises.map((ex) => ex.id));
       entries = routine.exercises.map((ex) => ({
@@ -720,9 +720,9 @@ router.post('/workouts', async (req, res) => {
        started_at AS "startedAt", finished_at AS "finishedAt", duration_sec AS "durationSec", notes`,
       [req.user.id, name, routineId, JSON.stringify(entries)]
     );
-    res.status(201).json({ message: 'Sesión iniciada.', workout: serializeWorkout(result.rows[0]) });
+    res.status(201).json({ message: 'Session started.', workout: serializeWorkout(result.rows[0]) });
   } catch (error) {
-    res.status(500).json({ message: 'No se pudo iniciar la sesión.', error: error.message });
+    res.status(500).json({ message: 'Could not start the session.', error: error.message });
   }
 });
 
@@ -735,10 +735,10 @@ router.get('/workouts/:id', async (req, res) => {
   try {
     await gymReady();
     const workout = await loadOwnWorkout(req.user.id, req.params.id);
-    if (!workout) return res.status(404).json({ message: 'Sesión no encontrada.' });
+    if (!workout) return res.status(404).json({ message: 'Session not found.' });
     res.json({ workout });
   } catch (error) {
-    res.status(500).json({ message: 'No se pudo cargar la sesión.', error: error.message });
+    res.status(500).json({ message: 'Could not load the session.', error: error.message });
   }
 });
 
@@ -746,7 +746,7 @@ router.put('/workouts/:id', async (req, res) => {
   try {
     await gymReady();
     const existing = await loadOwnWorkout(req.user.id, req.params.id);
-    if (!existing) return res.status(404).json({ message: 'Sesión no encontrada.' });
+    if (!existing) return res.status(404).json({ message: 'Session not found.' });
     const name = req.body?.name !== undefined ? String(req.body.name).trim().slice(0, 160) : existing.name;
     const notes = req.body?.notes !== undefined ? String(req.body.notes).slice(0, 4000) : existing.notes;
     const entries = req.body?.entries !== undefined ? sanitizeEntries(req.body.entries) : existing.entries;
@@ -757,9 +757,9 @@ router.put('/workouts/:id', async (req, res) => {
        finished_at AS "finishedAt", duration_sec AS "durationSec", notes`,
       [req.params.id, req.user.id, name, notes, JSON.stringify(entries)]
     );
-    res.json({ message: 'Sesión guardada.', workout: serializeWorkout(result.rows[0]) });
+    res.json({ message: 'Session saved.', workout: serializeWorkout(result.rows[0]) });
   } catch (error) {
-    res.status(500).json({ message: 'No se pudo guardar la sesión.', error: error.message });
+    res.status(500).json({ message: 'Could not save the session.', error: error.message });
   }
 });
 
@@ -767,8 +767,8 @@ router.post('/workouts/:id/finish', async (req, res) => {
   try {
     await gymReady();
     const existing = await loadOwnWorkout(req.user.id, req.params.id);
-    if (!existing) return res.status(404).json({ message: 'Sesión no encontrada.' });
-    if (existing.state === 'done') return res.json({ message: 'Ya estaba terminada.', workout: existing });
+    if (!existing) return res.status(404).json({ message: 'Session not found.' });
+    if (existing.state === 'done') return res.json({ message: 'It was already finished.', workout: existing });
 
     const entries = req.body?.entries !== undefined ? sanitizeEntries(req.body.entries) : existing.entries;
     const durationSec = Math.max(
@@ -782,9 +782,9 @@ router.post('/workouts/:id/finish', async (req, res) => {
        finished_at AS "finishedAt", duration_sec AS "durationSec", notes`,
       [req.params.id, req.user.id, JSON.stringify(entries), durationSec]
     );
-    res.json({ message: '¡Sesión terminada!', workout: serializeWorkout(result.rows[0]) });
+    res.json({ message: 'Session complete!', workout: serializeWorkout(result.rows[0]) });
   } catch (error) {
-    res.status(500).json({ message: 'No se pudo terminar la sesión.', error: error.message });
+    res.status(500).json({ message: 'Could not finish the session.', error: error.message });
   }
 });
 
@@ -794,15 +794,15 @@ router.delete('/workouts/:id', async (req, res) => {
     const result = await pool.query('DELETE FROM user_workouts WHERE id = $1 AND user_id = $2 RETURNING id', [
       req.params.id, req.user.id,
     ]);
-    if (!result.rows.length) return res.status(404).json({ message: 'Sesión no encontrada.' });
-    res.json({ id: result.rows[0].id, message: 'Sesión eliminada.' });
+    if (!result.rows.length) return res.status(404).json({ message: 'Session not found.' });
+    res.json({ id: result.rows[0].id, message: 'Session deleted.' });
   } catch (error) {
-    res.status(500).json({ message: 'No se pudo eliminar la sesión.', error: error.message });
+    res.status(500).json({ message: 'Could not delete the session.', error: error.message });
   }
 });
 
 // ---------------------------------------------------------------------------
-// Peso corporal
+// Body weight
 // ---------------------------------------------------------------------------
 
 router.get('/bodyweight', async (req, res) => {
@@ -820,7 +820,7 @@ router.get('/bodyweight', async (req, res) => {
       })),
     });
   } catch (error) {
-    res.status(500).json({ message: 'No se pudo cargar el peso.', error: error.message });
+    res.status(500).json({ message: 'Could not load the weight.', error: error.message });
   }
 });
 
@@ -829,7 +829,7 @@ router.post('/bodyweight', async (req, res) => {
     await gymReady();
     const weight = Number(req.body?.weight);
     if (!Number.isFinite(weight) || weight <= 0 || weight > 500) {
-      return res.status(400).json({ message: 'Peso inválido.' });
+      return res.status(400).json({ message: 'Invalid weight.' });
     }
     const weighedOn = /^\d{4}-\d{2}-\d{2}$/.test(String(req.body?.weighedOn))
       ? req.body.weighedOn
@@ -841,11 +841,11 @@ router.post('/bodyweight', async (req, res) => {
       [req.user.id, weighedOn, weight]
     );
     res.status(201).json({
-      message: 'Peso registrado.',
+      message: 'Weight saved.',
       entry: { id: result.rows[0].id, weighedOn: result.rows[0].weighedOn, weight: Number(result.rows[0].weight) },
     });
   } catch (error) {
-    res.status(500).json({ message: 'No se pudo registrar el peso.', error: error.message });
+    res.status(500).json({ message: 'Could not save the weight.', error: error.message });
   }
 });
 
@@ -855,15 +855,15 @@ router.delete('/bodyweight/:id', async (req, res) => {
     const result = await pool.query('DELETE FROM user_bodyweight WHERE id = $1 AND user_id = $2 RETURNING id', [
       req.params.id, req.user.id,
     ]);
-    if (!result.rows.length) return res.status(404).json({ message: 'Registro no encontrado.' });
-    res.json({ id: result.rows[0].id, message: 'Registro eliminado.' });
+    if (!result.rows.length) return res.status(404).json({ message: 'Entry not found.' });
+    res.json({ id: result.rows[0].id, message: 'Entry deleted.' });
   } catch (error) {
-    res.status(500).json({ message: 'No se pudo eliminar el registro.', error: error.message });
+    res.status(500).json({ message: 'Could not delete the entry.', error: error.message });
   }
 });
 
 // ---------------------------------------------------------------------------
-// Estadísticas
+// Stats
 // ---------------------------------------------------------------------------
 
 function volumeOf(entries) {
@@ -906,7 +906,7 @@ router.get('/stats/summary', async (req, res) => {
 
     const workouts = recent.rows.map(serializeWorkout);
 
-    // Volumen por semana (últimas 12) y racha de semanas
+    // Volume per week (last 12) and week streak
     const weekBuckets = new Map(); // monday ISO -> volume
     const weekHasWorkout = new Set();
     let monthVolume = 0;
@@ -931,7 +931,7 @@ router.get('/stats/summary', async (req, res) => {
     for (let i = 0; i < 52; i++) {
       const key = new Date(nowMonday.getTime() - i * 7 * 86400000).toISOString().slice(0, 10);
       if (weekHasWorkout.has(key)) streakWeeks++;
-      else if (i > 0) break; // la semana actual sin entrenar no rompe la racha aún
+      else if (i > 0) break; // the current week without training does not break the streak yet
     }
 
     const weeklyVolume = [];
@@ -940,7 +940,7 @@ router.get('/stats/summary', async (req, res) => {
       weeklyVolume.push({ week: key, volume: Math.round(weekBuckets.get(key) || 0) });
     }
 
-    // PRs: mejor serie por ejercicio (peso, con sus reps)
+    // PRs: best set per exercise (weight, with its reps)
     const prs = [];
     const prMap = new Map();
     for (const w of [...workouts].reverse()) {
@@ -975,7 +975,7 @@ router.get('/stats/summary', async (req, res) => {
       recentWorkouts: workouts.slice(0, 10),
     });
   } catch (error) {
-    res.status(500).json({ message: 'No se pudieron cargar las estadísticas.', error: error.message });
+    res.status(500).json({ message: 'Could not load the stats.', error: error.message });
   }
 });
 
@@ -1016,16 +1016,16 @@ router.get('/stats/exercise/:exId', async (req, res) => {
     const lastRows = lastSession ? lastSession.rows : [];
     res.json({ exId, sessions, best, last: lastRows.length ? lastRows[lastRows.length - 1] : null, totalVolume });
   } catch (error) {
-    res.status(500).json({ message: 'No se pudieron cargar las estadísticas del ejercicio.', error: error.message });
+    res.status(500).json({ message: 'Could not load the exercise stats.', error: error.message });
   }
 });
 
 // ---------------------------------------------------------------------------
-// Home: todo lo que la pantalla principal necesita en una llamada
+// Home: everything the main screen needs in one call
 // ---------------------------------------------------------------------------
 
 function isoDayOfWeek(date) {
-  // Lunes=1 .. Domingo=7 (como el modelo de openGym)
+  // Monday=1 .. Sunday=7 (like openGym's model)
   return ((date.getDay() + 6) % 7) + 1;
 }
 
@@ -1100,7 +1100,7 @@ router.get('/home', async (req, res) => {
       bodyweight: weightRows.rows[0] ? { weighedOn: weightRows.rows[0].weighedOn, weight: Number(weightRows.rows[0].weight) } : null,
     });
   } catch (error) {
-    res.status(500).json({ message: 'No se pudo cargar la portada.', error: error.message });
+    res.status(500).json({ message: 'Could not load the home screen.', error: error.message });
   }
 });
 

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonContent, IonIcon, IonSpinner, ViewWillEnter } from '@ionic/angular';
@@ -32,7 +32,7 @@ import { CatalogExercise, CatalogMeta, ExerciseStats, Routine } from '../service
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.Eager,
 })
-export class ExercisesPage implements ViewWillEnter {
+export class ExercisesPage implements OnInit, ViewWillEnter {
   query = '';
   bodyPart = '';
   equipment = '';
@@ -62,6 +62,7 @@ export class ExercisesPage implements ViewWillEnter {
   addingRoutineId: string | null = null;
 
   private searchTimer: any = null;
+  private catalogLoading = false;
 
   constructor(private readonly gymApi: GymApiService) {
     addIcons({
@@ -82,11 +83,28 @@ export class ExercisesPage implements ViewWillEnter {
     });
   }
 
+  ngOnInit() {
+    this.loadCatalogOnce();
+  }
+
   ionViewWillEnter() {
-    if (!this.meta) {
-      this.gymApi.getCatalogMeta().subscribe((meta) => (this.meta = meta));
-      this.search();
-    }
+    this.loadCatalogOnce();
+  }
+
+  private loadCatalogOnce() {
+    if (this.meta || this.catalogLoading) return;
+    this.catalogLoading = true;
+    this.gymApi.getCatalogMeta().subscribe({
+      next: (meta) => {
+        this.meta = meta;
+        this.catalogLoading = false;
+      },
+      error: () => {
+        this.catalogLoading = false;
+        this.errorMessage = 'Could not load the catalog.';
+      },
+    });
+    this.search();
   }
 
   // -- Búsqueda ------------------------------------------------------------
@@ -134,7 +152,7 @@ export class ExercisesPage implements ViewWillEnter {
           this.total = total;
           this.offset = exercises.length;
         },
-        error: () => (this.errorMessage = 'No se pudo cargar el catálogo.'),
+        error: () => (this.errorMessage = 'Could not load the catalog.'),
       })
       .add(() => (this.isLoading = false));
   }
@@ -215,7 +233,7 @@ export class ExercisesPage implements ViewWillEnter {
         const { routines } = await this.gymApi.getRoutines();
         this.routines = routines;
       } catch {
-        this.errorMessage = 'No se pudieron cargar tus rutinas.';
+        this.errorMessage = 'Could not load your routines.';
       } finally {
         this.routinesLoading = false;
       }
@@ -230,7 +248,7 @@ export class ExercisesPage implements ViewWillEnter {
     const ex = this.detail;
     if (!ex || this.addingRoutineId) return;
     if (routine.exercises.some((e) => e.id === ex.id)) {
-      this.successMessage = `«${ex.name}» ya está en ${routine.name}.`;
+      this.successMessage = `"${ex.name}" is already in ${routine.name}.`;
       this.addToRoutineOpen = false;
       setTimeout(() => (this.successMessage = ''), 2500);
       return;
@@ -249,12 +267,12 @@ export class ExercisesPage implements ViewWillEnter {
           ? { ...r, exercises: [...r.exercises, { id: ex.id, name: ex.name, sets: 3, reps: 10, weight: 0, restSec: 90 }] }
           : r,
       );
-      this.successMessage = `Añadido a ${routine.name}.`;
+      this.successMessage = `Added to ${routine.name}.`;
       this.addToRoutineOpen = false;
       this.detail = null;
       setTimeout(() => (this.successMessage = ''), 2500);
     } catch (error: any) {
-      this.errorMessage = error?.error?.message || 'No se pudo añadir el ejercicio.';
+      this.errorMessage = error?.error?.message || 'Could not add the exercise.';
     } finally {
       this.addingRoutineId = null;
     }

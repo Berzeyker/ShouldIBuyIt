@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonContent, IonIcon, IonSpinner, ViewWillEnter } from '@ionic/angular';
@@ -24,7 +24,7 @@ import {
 import { GymApiService } from '../services/gym-api.service';
 import { BodyweightEntry, StatsSummary, Workout } from '../services/gym.models';
 
-const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 @Component({
   selector: 'app-stats',
@@ -35,10 +35,12 @@ const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'o
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.Eager,
 })
-export class StatsPage implements ViewWillEnter {
+export class StatsPage implements OnInit, ViewWillEnter {
   summary: StatsSummary | null = null;
   recentWorkouts: Workout[] = [];
   bwEntries: BodyweightEntry[] = [];
+
+  private skipNextEnter = false;
 
   weightInput = '';
   expandedWorkout: string | null = null;
@@ -71,7 +73,16 @@ export class StatsPage implements ViewWillEnter {
     });
   }
 
+  ngOnInit() {
+    this.skipNextEnter = true;
+    this.refresh();
+  }
+
   ionViewWillEnter() {
+    if (this.skipNextEnter) {
+      this.skipNextEnter = false;
+      return;
+    }
     this.refresh();
   }
 
@@ -88,7 +99,7 @@ export class StatsPage implements ViewWillEnter {
       this.bwEntries = entries;
       this.weightInput = summary.bodyweight ? String(summary.bodyweight.weight) : '';
     } catch (error: any) {
-      this.errorMessage = error?.error?.message || 'No se pudieron cargar las estadísticas.';
+      this.errorMessage = error?.error?.message || 'Could not load the stats.';
     } finally {
       this.isLoading = false;
     }
@@ -100,7 +111,7 @@ export class StatsPage implements ViewWillEnter {
     if (!iso) return '';
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return '';
-    return `${String(d.getDate()).padStart(2, '0')} ${MESES[d.getMonth()]} ${d.getFullYear()}`;
+    return `${String(d.getDate()).padStart(2, '0')} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
   }
 
   fmtDuration(sec: number | null | undefined): string {
@@ -163,7 +174,7 @@ export class StatsPage implements ViewWillEnter {
   async saveWeight() {
     const weight = Number(this.weightInput);
     if (!this.weightInput || !Number.isFinite(weight) || weight <= 0) {
-      this.errorMessage = 'Escribe un peso válido.';
+      this.errorMessage = 'Enter a valid weight.';
       return;
     }
     this.isSavingWeight = true;
@@ -171,23 +182,23 @@ export class StatsPage implements ViewWillEnter {
     this.successMessage = '';
     try {
       await this.gymApi.saveBodyweight(weight);
-      this.successMessage = 'Peso registrado.';
+      this.successMessage = 'Weight saved.';
       setTimeout(() => (this.successMessage = ''), 2500);
       await this.refresh();
     } catch (error: any) {
-      this.errorMessage = error?.error?.message || 'No se pudo registrar el peso.';
+      this.errorMessage = error?.error?.message || 'Could not save the weight.';
     } finally {
       this.isSavingWeight = false;
     }
   }
 
   async deleteWeight(id: string) {
-    if (!window.confirm('¿Eliminar este registro de peso?')) return;
+    if (!window.confirm('Delete this weight entry?')) return;
     try {
       await this.gymApi.deleteBodyweight(id);
       await this.refresh();
     } catch (error: any) {
-      this.errorMessage = error?.error?.message || 'No se pudo eliminar el registro.';
+      this.errorMessage = error?.error?.message || 'Could not delete the entry.';
     }
   }
 

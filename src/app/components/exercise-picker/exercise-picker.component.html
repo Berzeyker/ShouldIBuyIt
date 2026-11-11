@@ -7,7 +7,7 @@
       type="text"
       [(ngModel)]="query"
       (input)="onQueryInput()"
-      placeholder="Buscar entre 5.600+ ejercicios...">
+      placeholder="Search among 5,600+ exercises...">
     <button class="glass-icon-btn sm" *ngIf="query" (click)="clearQuery()">
       <ion-icon name="close-outline"></ion-icon>
     </button>
@@ -25,7 +25,7 @@
   </div>
 
   <p class="text-muted" style="margin: 6px 0;">
-    {{ total }} ejercicios encontrados
+    {{ total }} exercises found
   </p>
 
   <!-- Resultados -->
@@ -34,7 +34,7 @@
   </div>
 
   <div *ngIf="!isLoading && results.length === 0" class="empty-state">
-    <p>Sin resultados. Prueba otros filtros.</p>
+    <p>No results. Try other filters.</p>
   </div>
 
   <div class="picker-results">
@@ -49,9 +49,9 @@
   </div>
 
   <button class="glass-btn glass-btn-ghost" *ngIf="offset < total" (click)="loadMore()" [disabled]="isLoading">
-    <span *ngIf="!isLoading">Cargar más ({{ total - offset }} restantes)</span>
+    <span *ngIf="!isLoading">Load more ({{ total - offset }} remaining)</span>
     <ion-spinner *ngIf="isLoading" name="crescent" style="width:16px;height:16px;"></ion-spinner>
   </button>
 
-  <button class="glass-btn glass-btn-ghost" style="margin-top:8px;" (click)="close()">Cancelar</button>
+  <button class="glass-btn glass-btn-ghost" style="margin-top:8px;" (click)="close()">Cancel</button>
 </div>

@@ -1,16 +1,16 @@
-// Construye server/data/catalog.json a partir del repositorio openGym clonado.
-// Uso: node scripts/build-catalog.mjs <ruta-al-clon-de-opengym>
-// Fusiona:
+// Builds server/data/catalog.json from a cloned openGym repository.
+// Usage: node scripts/build-catalog.mjs <path-to-opengym-clone>
+// Merges:
 //  - frontend/src/lib/exercises-data.js  (EXDB: id, n, bp, eq, tg, mg, sm, img, gif, cat, fv)
-//  - catalogue/exercises/*.json           (descripción + instrucciones por ejercicio)
-//  - catalogue/i18n/es.json              (nombre en español, si existe)
+//  - catalogue/exercises/*.json           (description + instructions per exercise)
+//  - catalogue/i18n/es.json              (Spanish name, if present)
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const repoRoot = process.argv[2];
 if (!repoRoot || !fs.existsSync(repoRoot)) {
-  console.error('Pasa la ruta del clon de openGym como argumento.');
+  console.error('Pass the path to the openGym clone as an argument.');
   process.exit(1);
 }
 
@@ -18,17 +18,17 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const outDir = path.join(here, '..', 'data');
 fs.mkdirSync(outDir, { recursive: true });
 
-// 1) EXDB: catálogo base (ESM con JSON inline)
+// 1) EXDB: base catalog (ESM with inline JSON)
 const dataModule = path.join(repoRoot, 'frontend', 'src', 'lib', 'exercises-data.js');
 const { EXDB } = await import('file://' + dataModule.replace(/\\/g, '/'));
-console.log(`EXDB: ${EXDB.length} ejercicios`);
+console.log(`EXDB: ${EXDB.length} exercises`);
 
-// 2) Nombres en español
+// 2) Spanish names
 const esPath = path.join(repoRoot, 'catalogue', 'i18n', 'es.json');
 const esNames = fs.existsSync(esPath) ? JSON.parse(fs.readFileSync(esPath, 'utf8')) : {};
-console.log(`es.json: ${Object.keys(esNames).length} nombres`);
+console.log(`es.json: ${Object.keys(esNames).length} names`);
 
-// 3) Descripciones e instrucciones
+// 3) Descriptions and instructions
 const detailDir = path.join(repoRoot, 'catalogue', 'exercises');
 const details = {};
 if (fs.existsSync(detailDir)) {
@@ -44,13 +44,13 @@ if (fs.existsSync(detailDir)) {
         };
       }
     } catch {
-      // archivo con JSON inválido: se ignora
+      // file with invalid JSON: ignored
     }
   }
 }
-console.log(`detalles: ${Object.keys(details).length} ejercicios`);
+console.log(`details: ${Object.keys(details).length} exercises`);
 
-// 4) Fusión final
+// 4) Final merge
 const catalog = EXDB.map((ex) => {
   const detail = details[ex.id] || {};
   const es = esNames[ex.id];
@@ -75,6 +75,6 @@ const catalog = EXDB.map((ex) => {
 
 const outPath = path.join(outDir, 'catalog.json');
 fs.writeFileSync(outPath, JSON.stringify(catalog));
-console.log(`Escrito ${outPath}: ${catalog.length} ejercicios, ${(
+console.log(`Wrote ${outPath}: ${catalog.length} exercises, ${(
   fs.statSync(outPath).size / 1024 / 1024
 ).toFixed(1)} MB`);

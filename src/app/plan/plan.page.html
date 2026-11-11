@@ -7,13 +7,13 @@
     <div class="gym-navbar">
       <div class="gym-nav-brand">
         <span>📅</span>
-        <span class="gym-nav-title">Mi Plan</span>
+        <span class="gym-nav-title">My Plan</span>
       </div>
       <div class="gym-nav-actions">
-        <button class="glass-icon-btn" title="Planes iniciales" (click)="openStarterSheet()">
+        <button class="glass-icon-btn" title="Starter plans" (click)="openStarterSheet()">
           <ion-icon name="sparkles-outline"></ion-icon>
         </button>
-        <button class="glass-icon-btn" title="Nueva rutina" (click)="nuevaRutina()">
+        <button class="glass-icon-btn" title="New routine" (click)="nuevaRutina()">
           <ion-icon name="add-outline"></ion-icon>
         </button>
       </div>
@@ -21,9 +21,9 @@
 
     <div class="gym-container">
       <div class="header-section">
-        <span class="glass-badge blue">Plan semanal</span>
-        <h2>Tu Semana</h2>
-        <p>Toca un día para asignar rutinas. Empieza hoy con la que te toca.</p>
+        <span class="glass-badge blue">Weekly plan</span>
+        <h2>Your Week</h2>
+        <p>Tap a day to assign routines. Start today with the one scheduled.</p>
       </div>
 
       <div class="glass-card" *ngIf="errorMessage">
@@ -42,11 +42,11 @@
         <div class="day-row" *ngFor="let day of dayKeys" (click)="openDay(day)" [class.today]="day === today">
           <div class="day-name">
             <span class="day-label">{{ dayNames[day] }}</span>
-            <span class="day-badge" *ngIf="day === today">HOY</span>
+            <span class="day-badge" *ngIf="day === today">TODAY</span>
           </div>
           <div class="day-routines">
             <span class="day-chip" *ngFor="let r of routinesForDay(day)">{{ r.emoji }} {{ r.name }}</span>
-            <span class="day-rest" *ngIf="routinesForDay(day).length === 0">Descanso</span>
+            <span class="day-rest" *ngIf="routinesForDay(day).length === 0">Rest</span>
           </div>
           <ion-icon name="chevron-forward-outline" class="day-chevron"></ion-icon>
         </div>
@@ -56,12 +56,12 @@
       <div class="glass-card" *ngIf="!isLoading">
         <div class="card-title">
           <ion-icon name="barbell-outline" class="icon" style="color: #60a5fa;"></ion-icon>
-          <h3>Mis Rutinas ({{ routines.length }})</h3>
+          <h3>My Routines ({{ routines.length }})</h3>
         </div>
 
         <div *ngIf="routines.length === 0" class="empty-state">
           <ion-icon name="barbell-outline" class="empty-icon"></ion-icon>
-          <p>Aún no tienes rutinas. Crea una o carga un plan inicial.</p>
+          <p>You don't have any routines yet. Create one or load a starter plan.</p>
         </div>
 
         <div class="glass-row routine-row" *ngFor="let r of routines" (click)="editarRutina(r.id)">
@@ -71,17 +71,17 @@
             <span class="glass-row-sub">{{ resumenRutina(r) }}</span>
           </div>
           <div class="routine-actions">
-            <button class="glass-icon-btn sm" title="Copiar" (click)="copiarRutina(r, $event)">
+            <button class="glass-icon-btn sm" title="Duplicate" (click)="copiarRutina(r, $event)">
               <ion-icon name="copy-outline"></ion-icon>
             </button>
-            <button class="glass-icon-btn sm" title="Eliminar" (click)="eliminarRutina(r, $event)">
+            <button class="glass-icon-btn sm" title="Delete" (click)="eliminarRutina(r, $event)">
               <ion-icon name="trash-outline"></ion-icon>
             </button>
           </div>
         </div>
 
         <button class="glass-btn" style="margin-top:8px;" (click)="nuevaRutina()">
-          <ion-icon name="add-outline"></ion-icon> Crear rutina
+          <ion-icon name="add-outline"></ion-icon> Create routine
         </button>
       </div>
     </div>
@@ -98,7 +98,7 @@
     </div>
 
     <div *ngIf="routines.length === 0" class="empty-state">
-      <p>Crea una rutina primero para poder asignarla.</p>
+      <p>Create a routine first so you can assign it.</p>
     </div>
 
     <div class="assign-row" *ngFor="let r of routines" (click)="toggleAssignment(selectedDay!, r.id)">
@@ -117,13 +117,13 @@
   <div class="glass-sheet-backdrop" *ngIf="starterSheetOpen" (click)="closeStarterSheet()"></div>
   <div class="glass-sheet" *ngIf="starterSheetOpen">
     <div class="glass-sheet-header">
-      <h3>Planes iniciales</h3>
+      <h3>Starter plans</h3>
       <button class="glass-icon-btn sm" (click)="closeStarterSheet()">
         <ion-icon name="close-outline"></ion-icon>
       </button>
     </div>
     <p class="text-muted" style="margin: 0 0 12px 0;">
-      Cargan rutinas listas para usar como plantillas editables, igual que openGym.
+      Load ready-to-use routines as editable templates, just like openGym.
     </p>
 
     <div class="starter-row" *ngFor="let opt of starterOptions" (click)="cargarStarter(opt.id)">

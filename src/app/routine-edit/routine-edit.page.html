@@ -9,11 +9,11 @@
         <button class="glass-icon-btn" (click)="goBack()">
           <ion-icon name="arrow-back-outline"></ion-icon>
         </button>
-        <span class="gym-nav-title">{{ isNew ? 'Nueva rutina' : 'Editar rutina' }}</span>
+        <span class="gym-nav-title">{{ isNew ? 'New routine' : 'Edit routine' }}</span>
       </div>
       <div class="gym-nav-actions">
         <button class="glass-btn glass-btn-sm" (click)="save()" [disabled]="isSaving">
-          <span *ngIf="!isSaving">Guardar</span>
+          <span *ngIf="!isSaving">Save</span>
           <ion-spinner *ngIf="isSaving" name="crescent" style="width:14px;height:14px;"></ion-spinner>
         </button>
       </div>
@@ -33,9 +33,9 @@
         <div class="glass-card">
           <div class="card-title">
             <ion-icon name="barbell" class="icon" style="color:#60a5fa;"></ion-icon>
-            <h3>Nombre de la rutina</h3>
+            <h3>Routine name</h3>
           </div>
-          <input class="glass-input" type="text" [(ngModel)]="name" placeholder="Ej. Push Day" maxlength="120">
+          <input class="glass-input" type="text" [(ngModel)]="name" placeholder="e.g. Push Day" maxlength="120">
 
           <div class="emoji-row">
             <button class="emoji-btn" *ngFor="let e of emojis" [class.active]="emoji === e" (click)="setEmoji(e)">{{ e }}</button>
@@ -46,11 +46,11 @@
         <div class="glass-card">
           <div class="card-title">
             <ion-icon name="list-outline" class="icon" style="color:#4ade80;"></ion-icon>
-            <h3>Ejercicios ({{ exercises.length }})</h3>
+            <h3>Exercises ({{ exercises.length }})</h3>
           </div>
 
           <div *ngIf="exercises.length === 0" class="empty-state">
-            <p>Sin ejercicios todavía. Añade el primero desde el catálogo.</p>
+            <p>No exercises yet. Add the first one from the catalog.</p>
           </div>
 
           <div class="ex-row" *ngFor="let ex of exercises; let i = index; trackBy: trackByIndex">
@@ -76,7 +76,7 @@
             <div class="ex-row-detail" *ngIf="expandedIndex === i">
               <div class="detail-grid">
                 <div class="detail-field">
-                  <label class="glass-label">Series</label>
+                  <label class="glass-label">Sets</label>
                   <input class="glass-input" type="number" min="1" max="20" [(ngModel)]="ex.sets">
                 </div>
                 <div class="detail-field">
@@ -84,21 +84,21 @@
                   <input class="glass-input" type="number" min="1" max="100" [(ngModel)]="ex.reps">
                 </div>
                 <div class="detail-field">
-                  <label class="glass-label">Peso (kg)</label>
+                  <label class="glass-label">Weight (kg)</label>
                   <input class="glass-input" type="number" min="0" step="0.5" [(ngModel)]="ex.weight">
                 </div>
                 <div class="detail-field">
-                  <label class="glass-label">Descanso (s)</label>
+                  <label class="glass-label">Rest (s)</label>
                   <input class="glass-input" type="number" min="0" max="900" step="15" [(ngModel)]="ex.restSec">
                 </div>
               </div>
-              <label class="glass-label" style="margin-top:10px;">Nota</label>
-              <input class="glass-input" type="text" [(ngModel)]="ex.note" placeholder="Opcional" maxlength="200">
+              <label class="glass-label" style="margin-top:10px;">Note</label>
+              <input class="glass-input" type="text" [(ngModel)]="ex.note" placeholder="Optional" maxlength="200">
             </div>
           </div>
 
           <button class="glass-btn glass-btn-blue" (click)="openPicker()">
-            <ion-icon name="add-outline"></ion-icon> Añadir ejercicio
+            <ion-icon name="add-outline"></ion-icon> Add exercise
           </button>
         </div>
       </ng-container>
@@ -109,7 +109,7 @@
   <div class="glass-sheet-backdrop" *ngIf="pickerOpen"></div>
   <div class="glass-sheet" *ngIf="pickerOpen">
     <div class="glass-sheet-header">
-      <h3>Buscar ejercicio</h3>
+      <h3>Search exercise</h3>
       <button class="glass-icon-btn sm" (click)="closePicker()">
         <ion-icon name="close-outline"></ion-icon>
       </button>

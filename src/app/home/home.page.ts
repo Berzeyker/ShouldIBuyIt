@@ -38,7 +38,7 @@ export class HomePage implements OnInit {
   isSavingWeight = false;
   successMessage = '';
   errorMessage = '';
-  currentUser = 'Usuario';
+  currentUser = 'User';
 
   constructor(
     private readonly authApiService: AuthApiService,
@@ -62,7 +62,7 @@ export class HomePage implements OnInit {
 
   async ngOnInit() {
     const user = await this.authApiService.getCurrentUser();
-    this.currentUser = user?.username || 'Usuario';
+    this.currentUser = user?.username || 'User';
     this.refresh();
   }
 
@@ -76,7 +76,7 @@ export class HomePage implements OnInit {
       this.home = home;
       this.currentWeight = home.bodyweight ? String(home.bodyweight.weight) : '';
     }).catch(() => {
-      this.errorMessage = 'No se pudo conectar con el servidor.';
+      this.errorMessage = 'Could not connect to the server.';
     });
     this.gymApi.getStatsSummary().then(({ summary }) => {
       this.summary = summary;
@@ -90,7 +90,7 @@ export class HomePage implements OnInit {
   async guardarPeso() {
     const weight = Number(this.currentWeight);
     if (!this.currentWeight || !Number.isFinite(weight) || weight <= 0) {
-      this.errorMessage = 'Escribe un peso válido.';
+      this.errorMessage = 'Enter a valid weight.';
       this.successMessage = '';
       return;
     }
@@ -99,10 +99,10 @@ export class HomePage implements OnInit {
     this.errorMessage = '';
     try {
       await this.gymApi.saveBodyweight(weight);
-      this.successMessage = '¡Peso registrado con éxito!';
+      this.successMessage = 'Weight saved successfully!';
       setTimeout(() => (this.successMessage = ''), 2500);
     } catch (error: any) {
-      this.errorMessage = error?.error?.message || 'No se pudo registrar el peso.';
+      this.errorMessage = error?.error?.message || 'Could not save the weight.';
     } finally {
       this.isSavingWeight = false;
     }
@@ -126,7 +126,7 @@ export class HomePage implements OnInit {
         this.router.navigateByUrl('/tabs/start');
         return;
       }
-      this.errorMessage = error?.error?.message || 'No se pudo iniciar la sesión.';
+      this.errorMessage = error?.error?.message || 'Could not start the session.';
     }
   }
 
