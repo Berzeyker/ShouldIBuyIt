@@ -1,0 +1,120 @@
+<ion-content [fullscreen]="true" class="routine-edit-content">
+
+  <div class="gym-bg gym-bg-2"></div>
+  <div class="gym-video-overlay"></div>
+
+  <div class="gym-page-wrapper">
+    <div class="gym-navbar">
+      <div class="gym-nav-brand">
+        <button class="glass-icon-btn" (click)="goBack()">
+          <ion-icon name="arrow-back-outline"></ion-icon>
+        </button>
+        <span class="gym-nav-title">{{ isNew ? 'Nueva rutina' : 'Editar rutina' }}</span>
+      </div>
+      <div class="gym-nav-actions">
+        <button class="glass-btn glass-btn-sm" (click)="save()" [disabled]="isSaving">
+          <span *ngIf="!isSaving">Guardar</span>
+          <ion-spinner *ngIf="isSaving" name="crescent" style="width:14px;height:14px;"></ion-spinner>
+        </button>
+      </div>
+    </div>
+
+    <div class="gym-container">
+      <div class="glass-card" *ngIf="errorMessage">
+        <p style="margin:0; color:#f87171; font-size:12px;">{{ errorMessage }}</p>
+      </div>
+
+      <div *ngIf="isLoading" class="empty-state">
+        <ion-spinner name="crescent" color="light"></ion-spinner>
+      </div>
+
+      <ng-container *ngIf="!isLoading">
+        <!-- Nombre y emoji -->
+        <div class="glass-card">
+          <div class="card-title">
+            <ion-icon name="barbell" class="icon" style="color:#60a5fa;"></ion-icon>
+            <h3>Nombre de la rutina</h3>
+          </div>
+          <input class="glass-input" type="text" [(ngModel)]="name" placeholder="Ej. Push Day" maxlength="120">
+
+          <div class="emoji-row">
+            <button class="emoji-btn" *ngFor="let e of emojis" [class.active]="emoji === e" (click)="setEmoji(e)">{{ e }}</button>
+          </div>
+        </div>
+
+        <!-- Ejercicios -->
+        <div class="glass-card">
+          <div class="card-title">
+            <ion-icon name="list-outline" class="icon" style="color:#4ade80;"></ion-icon>
+            <h3>Ejercicios ({{ exercises.length }})</h3>
+          </div>
+
+          <div *ngIf="exercises.length === 0" class="empty-state">
+            <p>Sin ejercicios todavía. Añade el primero desde el catálogo.</p>
+          </div>
+
+          <div class="ex-row" *ngFor="let ex of exercises; let i = index; trackBy: trackByIndex">
+            <div class="ex-row-head" (click)="toggleExpanded(i)">
+              <span class="ex-index">{{ i + 1 }}</span>
+              <div class="glass-row-main">
+                <span class="glass-row-title">{{ ex.name }}</span>
+                <span class="glass-row-sub">{{ ex.sets }} × {{ ex.reps }}<span *ngIf="ex.weight > 0"> · {{ ex.weight }} kg</span><span *ngIf="ex.restSec"> · {{ ex.restSec }}s</span></span>
+              </div>
+              <div class="ex-row-actions">
+                <button class="glass-icon-btn sm" *ngIf="i > 0" (click)="moveExercise(i, -1); $event.stopPropagation()">
+                  <ion-icon name="chevron-up-outline"></ion-icon>
+                </button>
+                <button class="glass-icon-btn sm" *ngIf="i < exercises.length - 1" (click)="moveExercise(i, 1); $event.stopPropagation()">
+                  <ion-icon name="chevron-down-outline"></ion-icon>
+                </button>
+                <button class="glass-icon-btn sm" (click)="removeExercise(i); $event.stopPropagation()">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </button>
+              </div>
+            </div>
+
+            <div class="ex-row-detail" *ngIf="expandedIndex === i">
+              <div class="detail-grid">
+                <div class="detail-field">
+                  <label class="glass-label">Series</label>
+                  <input class="glass-input" type="number" min="1" max="20" [(ngModel)]="ex.sets">
+                </div>
+                <div class="detail-field">
+                  <label class="glass-label">Reps</label>
+                  <input class="glass-input" type="number" min="1" max="100" [(ngModel)]="ex.reps">
+                </div>
+                <div class="detail-field">
+                  <label class="glass-label">Peso (kg)</label>
+                  <input class="glass-input" type="number" min="0" step="0.5" [(ngModel)]="ex.weight">
+                </div>
+                <div class="detail-field">
+                  <label class="glass-label">Descanso (s)</label>
+                  <input class="glass-input" type="number" min="0" max="900" step="15" [(ngModel)]="ex.restSec">
+                </div>
+              </div>
+              <label class="glass-label" style="margin-top:10px;">Nota</label>
+              <input class="glass-input" type="text" [(ngModel)]="ex.note" placeholder="Opcional" maxlength="200">
+            </div>
+          </div>
+
+          <button class="glass-btn glass-btn-blue" (click)="openPicker()">
+            <ion-icon name="add-outline"></ion-icon> Añadir ejercicio
+          </button>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+
+  <!-- Picker de ejercicios -->
+  <div class="glass-sheet-backdrop" *ngIf="pickerOpen"></div>
+  <div class="glass-sheet" *ngIf="pickerOpen">
+    <div class="glass-sheet-header">
+      <h3>Buscar ejercicio</h3>
+      <button class="glass-icon-btn sm" (click)="closePicker()">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+    <app-exercise-picker (picked)="onExercisePicked($event)" (closed)="closePicker()"></app-exercise-picker>
+  </div>
+
+</ion-content>

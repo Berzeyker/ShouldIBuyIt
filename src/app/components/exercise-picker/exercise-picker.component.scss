@@ -1,0 +1,31 @@
+.picker {
+  .picker-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+
+    ion-icon {
+      font-size: 16px;
+      color: #94a3b8;
+      flex-shrink: 0;
+    }
+
+    .glass-input { padding: 10px 12px; }
+  }
+
+  .picker-results {
+    max-height: 52vh;
+    overflow-y: auto;
+    margin-top: 6px;
+  }
+
+  .picker-thumb {
+    width: 44px;
+    height: 44px;
+    object-fit: contain;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    flex-shrink: 0;
+  }
+}

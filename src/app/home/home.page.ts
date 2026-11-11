@@ -1,83 +1,161 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonContent, IonIcon } from '@ionic/angular';
+import { IonContent, IonIcon, IonSpinner } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { addIcons } from 'ionicons';
-import { 
-  personCircleOutline, 
-  statsChartOutline, 
-  barbellOutline, 
-  scaleOutline, 
+import {
+  personCircleOutline,
+  statsChartOutline,
+  barbellOutline,
+  scaleOutline,
   checkmarkOutline,
-  logOutOutline
+  logOutOutline,
+  flameOutline,
+  calendarOutline,
+  timeOutline,
+  playOutline,
+  trendingUpOutline,
 } from 'ionicons/icons';
 import { AuthApiService } from '../services/auth-api.service';
+import { GymApiService } from '../services/gym-api.service';
+import { HomePayload, StatsSummary } from '../services/gym.models';
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.page.html',
   styleUrls: ['./home.page.scss'],
   standalone: true,
-  imports: [
-    CommonModule, 
-    FormsModule, 
-    IonContent,
-    IonIcon
-  ],
-  schemas: [CUSTOM_ELEMENTS_SCHEMA]
+  imports: [CommonModule, FormsModule, IonContent, IonIcon],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  changeDetection: ChangeDetectionStrategy.Eager,
 })
-export class HomePage {
-  currentWeight: string = '';
-  isLoading: boolean = false;
-  successMessage: string = '';
-  currentUser: string = 'Usuario';
+export class HomePage implements OnInit {
+  home: HomePayload | null = null;
+  summary: StatsSummary | null = null;
+  currentWeight = '';
+  isLoading = false;
+  isSavingWeight = false;
+  successMessage = '';
+  errorMessage = '';
+  currentUser = 'Usuario';
 
   constructor(
     private readonly authApiService: AuthApiService,
-    private readonly router: Router
+    private readonly gymApi: GymApiService,
+    private readonly router: Router,
   ) {
-    addIcons({ 
+    addIcons({
       personCircleOutline,
       statsChartOutline,
       barbellOutline,
       scaleOutline,
       checkmarkOutline,
-      logOutOutline
+      logOutOutline,
+      flameOutline,
+      calendarOutline,
+      timeOutline,
+      playOutline,
+      trendingUpOutline,
     });
   }
 
   async ngOnInit() {
     const user = await this.authApiService.getCurrentUser();
     this.currentUser = user?.username || 'Usuario';
+    this.refresh();
+  }
+
+  ionViewWillEnter() {
+    this.refresh();
+  }
+
+  refresh(): void {
+    this.errorMessage = '';
+    this.gymApi.getHome().then((home) => {
+      this.home = home;
+      this.currentWeight = home.bodyweight ? String(home.bodyweight.weight) : '';
+    }).catch(() => {
+      this.errorMessage = 'No se pudo conectar con el servidor.';
+    });
+    this.gymApi.getStatsSummary().then(({ summary }) => {
+      this.summary = summary;
+    }).catch(() => undefined);
   }
 
   onWeightInput(event: any) {
     this.currentWeight = event.target.value;
   }
 
-  guardarPeso() {
-    if (!this.currentWeight || !this.currentWeight.trim()) {
+  async guardarPeso() {
+    const weight = Number(this.currentWeight);
+    if (!this.currentWeight || !Number.isFinite(weight) || weight <= 0) {
+      this.errorMessage = 'Escribe un peso válido.';
+      this.successMessage = '';
       return;
     }
-
-    this.isLoading = true;
+    this.isSavingWeight = true;
     this.successMessage = '';
-
-    setTimeout(() => {
-      console.log('Peso guardado:', this.currentWeight);
-      this.isLoading = false;
+    this.errorMessage = '';
+    try {
+      await this.gymApi.saveBodyweight(weight);
       this.successMessage = '¡Peso registrado con éxito!';
-      this.currentWeight = '';
-      
-      setTimeout(() => {
-        this.successMessage = '';
-      }, 3000);
-    }, 600);
+      setTimeout(() => (this.successMessage = ''), 2500);
+    } catch (error: any) {
+      this.errorMessage = error?.error?.message || 'No se pudo registrar el peso.';
+    } finally {
+      this.isSavingWeight = false;
+    }
   }
 
-  iniciarRutina() {
-    console.log('Iniciando rutina de Push Day...');
+  async iniciarRutina(routineId?: string) {
+    try {
+      if (!routineId && this.home?.activeWorkout) {
+        this.router.navigateByUrl('/tabs/start');
+        return;
+      }
+      if (this.home?.activeWorkout) {
+        this.router.navigateByUrl('/tabs/start');
+        return;
+      }
+      await this.gymApi.startWorkout(routineId ?? null);
+      this.router.navigateByUrl('/tabs/start');
+    } catch (error: any) {
+      // 409: ya hay sesión activa -> continuarla
+      if (error?.error?.workout || error?.status === 409) {
+        this.router.navigateByUrl('/tabs/start');
+        return;
+      }
+      this.errorMessage = error?.error?.message || 'No se pudo iniciar la sesión.';
+    }
+  }
+
+  continuarSesion() {
+    this.router.navigateByUrl('/tabs/start');
+  }
+
+  irAlPlan() {
+    this.router.navigateByUrl('/tabs/plan');
+  }
+
+  irALaBiblioteca() {
+    this.router.navigateByUrl('/tabs/exercises');
+  }
+
+  duracionUltima(): string {
+    const w = this.home?.lastWorkout;
+    if (!w?.durationSec) return '';
+    const min = Math.round(w.durationSec / 60);
+    return min >= 60 ? `${Math.floor(min / 60)} h ${min % 60} min` : `${min} min`;
+  }
+
+  volumenUltima(): number {
+    const w = this.home?.lastWorkout;
+    if (!w) return 0;
+    return w.entries.reduce(
+      (v, en) => v + en.rows.filter((r) => r.phase !== 'warmup').reduce((s, r) => s + r.w * r.r, 0),
+      0,
+    );
   }
 
   async cambiarUsuario() {

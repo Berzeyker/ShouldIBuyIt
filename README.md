@@ -62,3 +62,5 @@ Configura `DATABASE_URL` en `server/.env` (consulta `server/.env.example`). Inic
 | DELETE | `/api/exercises/:id` | Elimina un ejercicio |
 
 La tabla `exercises` se crea automáticamente al usar la API; su definición también está en `database/schema.sql`.
+
+Consulta la [documentación completa de endpoints](./docs/API-ENDPOINTS.md) para ver autenticación, cuerpos de solicitud, respuestas y códigos de error.

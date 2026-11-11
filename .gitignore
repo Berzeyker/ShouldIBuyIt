@@ -72,3 +72,7 @@ src/assets/images/Backgrounds/backvideo1.mp4
 src/assets/images/Backgrounds/backvideo2.mp4
 src/assets/images/Backgrounds/backvideo3.mp4
 src/assets/images/Backgrounds/backvideo4.mp4
+
+# Catálogo openGym: media pesada y volcados generados (se construyen con server/scripts/build-catalog.mjs)
+/server/public/ex/
+/server/data/catalog.json

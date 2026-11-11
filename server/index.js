@@ -2,9 +2,11 @@ const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const path = require('path');
 require('dotenv').config();
 
 const { pool } = require('./db');
+const { router: gymRouter } = require('./gym-routes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,6 +15,20 @@ const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 app.use(cors());
 app.use(express.json());
+
+// Media del catálogo openGym (imágenes webp y clips mp4)
+app.use('/ex', express.static(path.join(__dirname, 'public', 'ex'), { maxAge: '30d' }));
+
+// Rutas de gym: catálogo y auth son públicos; el resto requiere sesión
+app.use('/api', (req, res, next) => {
+  const p = req.path;
+  // Los datos autenticados son específicos de cada usuario: no permitir caché
+  // por URL (Chromium ignora Authorization al cachear GETs y podría servir
+  // respuestas de otra sesión vía 304). El catálogo sí es público y cacheable.
+  if (!p.startsWith('/catalog')) res.set('Cache-Control', 'no-store');
+  if (p.startsWith('/catalog') || p.startsWith('/auth') || p === '/health') return next();
+  return authMiddleware(req, res, next);
+}, gymRouter);
 
 function createToken(user) {
   return jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '7d' }); //users 

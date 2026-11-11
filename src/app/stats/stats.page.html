@@ -1,13 +1,193 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>stats</ion-title>
-  </ion-toolbar>
-</ion-header>
+<ion-content [fullscreen]="true" class="stats-content">
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">stats</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <!-- Fondo liquid glass -->
+  <div class="gym-bg gym-bg-2"></div>
+  <div class="gym-video-overlay"></div>
+
+  <div class="gym-page-wrapper">
+
+    <!-- Barra superior -->
+    <div class="gym-navbar">
+      <div class="gym-nav-brand">
+        <span>📊</span>
+        <span class="gym-nav-title">Estadísticas</span>
+      </div>
+      <div class="gym-nav-actions">
+        <button class="glass-icon-btn" (click)="refresh()">
+          <ion-icon name="refresh-outline"></ion-icon>
+        </button>
+      </div>
+    </div>
+
+    <div class="gym-container">
+
+      <div class="header-section">
+        <span class="glass-badge">Tu progreso</span>
+        <h2>Racha, volumen y récords</h2>
+      </div>
+
+      <div *ngIf="isLoading" class="empty-state">
+        <ion-spinner name="crescent" color="light"></ion-spinner>
+      </div>
+
+      <div class="glass-card" *ngIf="errorMessage">
+        <p style="margin:0; color:#f87171; font-size:12px;">{{ errorMessage }}</p>
+      </div>
+      <div class="glass-card" *ngIf="successMessage">
+        <p style="margin:0; color:#4ade80; font-size:12px;">{{ successMessage }}</p>
+      </div>
+
+      <ng-container *ngIf="!isLoading && summary">
+
+        <!-- Tarjetas resumen -->
+        <div class="glass-card">
+          <div class="stats-grid">
+            <div class="stat-item">
+              <span class="stat-label">Sesiones</span>
+              <span class="stat-value">{{ summary.totalWorkouts }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Este mes</span>
+              <span class="stat-value highlight">{{ summary.thisMonth }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Vol. mensual</span>
+              <span class="stat-value">{{ summary.monthVolume | number: '1.0-0' }} kg</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Racha</span>
+              <span class="stat-value highlight">{{ summary.streakWeeks }} sem</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Volumen semanal -->
+        <div class="glass-card">
+          <div class="card-title">
+            <ion-icon name="bar-chart-outline" class="icon" style="color: #60a5fa;"></ion-icon>
+            <h3>Volumen (12 semanas)</h3>
+          </div>
+          <div class="volume-chart">
+            <div class="volume-col" *ngFor="let w of summary.weeklyVolume">
+              <span class="volume-val">{{ w.volume > 0 ? (w.volume | number: '1.0-0') : '' }}</span>
+              <div class="volume-bar-track">
+                <div class="volume-bar" [style.height.%]="barHeightPct(w.volume)"></div>
+              </div>
+              <span class="volume-label">{{ weekLabel(w.week) }}</span>
+            </div>
+          </div>
+          <p class="text-muted" style="margin:10px 0 0 0;">
+            Volumen = peso × repeticiones de las series de trabajo.
+          </p>
+        </div>
+
+        <!-- Récords personales -->
+        <div class="glass-card">
+          <div class="card-title">
+            <ion-icon name="ribbon-outline" class="icon" style="color: #fbbf24;"></ion-icon>
+            <h3>Récords personales</h3>
+          </div>
+          <div *ngIf="summary.prs.length === 0" class="empty-state">
+            <ion-icon name="ribbon-outline" class="empty-icon"></ion-icon>
+            <p>Registra series con peso para ver tus PRs aquí.</p>
+          </div>
+          <div class="pr-row" *ngFor="let pr of summary.prs.slice(0, 8)">
+            <div class="glass-row-main">
+              <span class="pr-name">{{ pr.name }}</span>
+              <span class="pr-date">{{ fmtDate(pr.date) }}</span>
+            </div>
+            <span class="pr-val">{{ pr.w }} kg × {{ pr.r }}</span>
+          </div>
+        </div>
+
+        <!-- Peso corporal -->
+        <div class="glass-card">
+          <div class="card-title">
+            <ion-icon name="scale-outline" class="icon" style="color: #4ade80;"></ion-icon>
+            <h3>Peso corporal</h3>
+          </div>
+
+          <div *ngIf="summary.bodyweightSeries.length > 1" class="bw-chart">
+            <svg viewBox="0 0 100 30" preserveAspectRatio="none">
+              <polyline [attr.points]="bwPoints()" fill="none" stroke="#4ade80" stroke-width="1.2" vector-effect="non-scaling-stroke" />
+            </svg>
+          </div>
+
+          <div class="bw-current" *ngIf="summary.bodyweight">
+            <span class="bw-value">{{ summary.bodyweight.weight }} kg</span>
+            <span class="bw-delta" *ngIf="bwDelta() !== null">
+              {{ bwDelta()! > 0 ? '▲' : bwDelta()! < 0 ? '▼' : '●' }}
+              {{ bwDelta()! > 0 ? '+' : '' }}{{ bwDelta() }} kg
+            </span>
+          </div>
+
+          <div class="bw-save-row">
+            <input class="glass-input" type="number" step="0.1" min="0" placeholder="Peso de hoy (kg)"
+                   [(ngModel)]="weightInput">
+            <button class="glass-btn glass-btn-sm" (click)="saveWeight()" [disabled]="isSavingWeight">
+              <span *ngIf="!isSavingWeight" style="display:flex;align-items:center;gap:4px;">
+                <ion-icon name="checkmark-outline"></ion-icon> Guardar
+              </span>
+              <ion-spinner *ngIf="isSavingWeight" name="crescent" style="width:14px;height:14px;"></ion-spinner>
+            </button>
+          </div>
+
+          <div class="bw-entry" *ngFor="let e of bwEntries.slice(0, 5)">
+            <span>{{ fmtDate(e.weighedOn) }}</span>
+            <span class="bw-entry-weight">{{ e.weight }} kg</span>
+            <button class="glass-icon-btn sm" (click)="deleteWeight(e.id)">
+              <ion-icon name="trash-outline"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- Historial de sesiones -->
+        <div class="glass-card">
+          <div class="card-title">
+            <ion-icon name="calendar-outline" class="icon" style="color: #60a5fa;"></ion-icon>
+            <h3>Últimas sesiones</h3>
+          </div>
+
+          <div *ngIf="recentWorkouts.length === 0" class="empty-state">
+            <ion-icon name="barbell-outline" class="empty-icon"></ion-icon>
+            <p>Aún no hay sesiones terminadas.</p>
+            <button class="glass-btn glass-btn-sm" style="margin-top:8px;" (click)="irASesion()">
+              <ion-icon name="play-outline"></ion-icon> Empezar ahora
+            </button>
+          </div>
+
+          <div class="wo-row" *ngFor="let w of recentWorkouts">
+            <div class="wo-row-head" (click)="toggleWorkout(w.id)">
+              <div class="glass-row-main">
+                <span class="glass-row-title">{{ w.name }}</span>
+                <span class="glass-row-sub">
+                  {{ fmtDate(w.finishedAt || w.startedAt) }} · {{ fmtDuration(w.durationSec) }}
+                  · {{ workoutSets(w) }} series · {{ workoutVolume(w) | number: '1.0-0' }} kg
+                </span>
+              </div>
+              <ion-icon [name]="expandedWorkout === w.id ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+            </div>
+
+            <div class="wo-detail" *ngIf="expandedWorkout === w.id">
+              <div class="wo-entry" *ngFor="let en of w.entries">
+                <div class="wo-entry-head">
+                  <span class="wo-entry-name">{{ en.name }}</span>
+                  <span class="wo-entry-rows" *ngIf="workRows(en).length">
+                    {{ workRows(en).length }} series
+                  </span>
+                </div>
+                <div class="wo-set" *ngFor="let row of workRows(en)">
+                  {{ row.w }} kg × {{ row.r }}
+                </div>
+                <p class="text-muted" *ngIf="workRows(en).length === 0" style="margin:2px 0 0 0;">
+                  Sin series registradas
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+
 </ion-content>

@@ -1,0 +1,57 @@
+<div class="picker">
+  <!-- Buscador -->
+  <div class="picker-search">
+    <ion-icon name="search-outline"></ion-icon>
+    <input
+      class="glass-input"
+      type="text"
+      [(ngModel)]="query"
+      (input)="onQueryInput()"
+      placeholder="Buscar entre 5.600+ ejercicios...">
+    <button class="glass-icon-btn sm" *ngIf="query" (click)="clearQuery()">
+      <ion-icon name="close-outline"></ion-icon>
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="glass-chips">
+    <span class="glass-chip" *ngFor="let bp of bodyParts" [class.active]="bodyPart === bp" (click)="setBodyPart(bp)">{{ bp }}</span>
+  </div>
+  <div class="glass-chips">
+    <span class="glass-chip" *ngFor="let eq of equipmentList" [class.active]="equipment === eq" (click)="setEquipment(eq)">{{ eq }}</span>
+  </div>
+  <div class="glass-chips" *ngIf="categories.length">
+    <span class="glass-chip" *ngFor="let cat of categories" [class.active]="category === cat" (click)="setCategory(cat)">{{ cat }}</span>
+  </div>
+
+  <p class="text-muted" style="margin: 6px 0;">
+    {{ total }} ejercicios encontrados
+  </p>
+
+  <!-- Resultados -->
+  <div *ngIf="isLoading && results.length === 0" class="empty-state">
+    <ion-spinner name="crescent" color="light"></ion-spinner>
+  </div>
+
+  <div *ngIf="!isLoading && results.length === 0" class="empty-state">
+    <p>Sin resultados. Prueba otros filtros.</p>
+  </div>
+
+  <div class="picker-results">
+    <div class="glass-row" *ngFor="let ex of results" (click)="pick(ex)">
+      <img class="picker-thumb" [src]="imageUrl(ex)" [alt]="ex.name" loading="lazy" (error)="$event.target.style.opacity='0.15'">
+      <div class="glass-row-main">
+        <span class="glass-row-title">{{ ex.name }}</span>
+        <span class="glass-row-sub">{{ ex.bodyPart }} · {{ ex.equipment }} · {{ ex.target }}</span>
+      </div>
+      <ion-icon name="add-circle-outline" style="color:#4ade80; font-size:20px; flex-shrink:0;"></ion-icon>
+    </div>
+  </div>
+
+  <button class="glass-btn glass-btn-ghost" *ngIf="offset < total" (click)="loadMore()" [disabled]="isLoading">
+    <span *ngIf="!isLoading">Cargar más ({{ total - offset }} restantes)</span>
+    <ion-spinner *ngIf="isLoading" name="crescent" style="width:16px;height:16px;"></ion-spinner>
+  </button>
+
+  <button class="glass-btn glass-btn-ghost" style="margin-top:8px;" (click)="close()">Cancelar</button>
+</div>

@@ -69,6 +69,9 @@ sileo-toaster > div {
   margin-bottom: 16px;
 }
 
+/* Sistema liquid glass completo para las pantallas del gym */
+@import './theme/liquid-glass.scss';
+
 /* Forzar un fondo oscuro uniforme y elegante para las vistas */
 ion-content {
   --background: #0f172a;

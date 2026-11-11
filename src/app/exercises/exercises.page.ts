@@ -1,160 +1,262 @@
-import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonContent, IonHeader, IonSpinner, IonTitle, IonToolbar } from '@ionic/angular';
-import { finalize } from 'rxjs';
+import { IonContent, IonIcon, IonSpinner, ViewWillEnter } from '@ionic/angular';
+import { addIcons } from 'ionicons';
 import {
-  Exercise,
-  ExerciseInput,
-  ExercisesApiService,
-} from '../services/exercises-api.service';
-
-function emptyExercise(): ExerciseInput {
-  return { name: '', muscleGroup: '', equipment: '', notes: '' };
-}
+  searchOutline,
+  closeOutline,
+  chevronDownOutline,
+  chevronUpOutline,
+  chevronForwardOutline,
+  addOutline,
+  addCircleOutline,
+  videocamOutline,
+  imageOutline,
+  ribbonOutline,
+  timeOutline,
+  trendingUpOutline,
+  barbellOutline,
+  checkmarkOutline,
+  arrowForwardOutline,
+} from 'ionicons/icons';
+import { GymApiService } from '../services/gym-api.service';
+import { CatalogExercise, CatalogMeta, ExerciseStats, Routine } from '../services/gym.models';
 
 @Component({
   selector: 'app-exercises',
   templateUrl: './exercises.page.html',
   styleUrls: ['./exercises.page.scss'],
   standalone: true,
-  imports: [IonContent, IonHeader, IonTitle, IonToolbar, IonSpinner, FormsModule],
+  imports: [CommonModule, FormsModule, IonContent, IonIcon, IonSpinner],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  changeDetection: ChangeDetectionStrategy.Eager,
 })
-export class ExercisesPage implements OnInit {
-  private readonly exercisesApi = inject(ExercisesApiService);
+export class ExercisesPage implements ViewWillEnter {
+  query = '';
+  bodyPart = '';
+  equipment = '';
+  category = '';
 
-  exercises: Exercise[] = [];
-  form: ExerciseInput = emptyExercise();
-  editingExercise: Exercise | null = null;
+  meta: CatalogMeta | null = null;
+  results: CatalogExercise[] = [];
+  total = 0;
+  offset = 0;
+  readonly pageSize = 40;
+
   isLoading = false;
   errorMessage = '';
   successMessage = '';
 
-  ngOnInit(): void {
-    this.loadExercises();
-  }
+  // Detalle
+  detail: CatalogExercise | null = null;
+  detailStats: ExerciseStats | null = null;
+  detailLoading = false;
+  showClip = false;
+  clipFailed = false;
 
-  loadExercises(): void {
-    this.errorMessage = '';
-    this.isLoading = true;
-    this.exercisesApi.getExercises()
-      .pipe(finalize(() => this.isLoading = false))
-      .subscribe({
-        next: ({ exercises }) => this.exercises = exercises,
-        error: (error: unknown) => this.showError(error, 'No se pudieron cargar los ejercicios.'),
-      });
-  }
+  // Añadir a rutina
+  addToRoutineOpen = false;
+  routines: Routine[] = [];
+  routinesLoading = false;
+  addingRoutineId: string | null = null;
 
-  saveExercise(): void {
-    if (!this.form.name.trim()) {
-      this.errorMessage = 'Escribe el nombre del ejercicio.';
-      this.successMessage = '';
-      return;
-    }
+  private searchTimer: any = null;
 
-    this.errorMessage = '';
-    this.successMessage = '';
-    this.isLoading = true;
-
-    const request = this.editingExercise
-      ? this.exercisesApi.replaceExercise(this.editingExercise.id, this.normalizedForm())
-      : this.exercisesApi.createExercise(this.normalizedForm());
-
-    request.pipe(finalize(() => this.isLoading = false)).subscribe({
-      next: ({ exercise, message }) => {
-        this.exercises = this.editingExercise
-          ? this.exercises.map((item) => item.id === exercise.id ? exercise : item)
-          : [exercise, ...this.exercises];
-        this.successMessage = message;
-        this.resetForm();
-      },
-      error: (error: unknown) => this.showError(error, 'No se pudo guardar el ejercicio.'),
+  constructor(private readonly gymApi: GymApiService) {
+    addIcons({
+      searchOutline,
+      closeOutline,
+      chevronDownOutline,
+      chevronUpOutline,
+      addOutline,
+      addCircleOutline,
+      videocamOutline,
+      imageOutline,
+      ribbonOutline,
+      timeOutline,
+      trendingUpOutline,
+      barbellOutline,
+      checkmarkOutline,
+      arrowForwardOutline,
     });
   }
 
-  patchExercise(): void {
-    if (!this.editingExercise) return;
+  ionViewWillEnter() {
+    if (!this.meta) {
+      this.gymApi.getCatalogMeta().subscribe((meta) => (this.meta = meta));
+      this.search();
+    }
+  }
 
-    const changes: Partial<ExerciseInput> = {};
-    const current = this.normalizedForm();
-    for (const field of Object.keys(current) as (keyof ExerciseInput)[]) {
-      if (current[field] !== this.editingExercise[field]) {
-        changes[field] = current[field];
+  // -- Búsqueda ------------------------------------------------------------
+
+  onQueryInput() {
+    if (this.searchTimer) clearTimeout(this.searchTimer);
+    this.searchTimer = setTimeout(() => this.search(), 300);
+  }
+
+  clearQuery() {
+    this.query = '';
+    this.search();
+  }
+
+  setBodyPart(bp: string) {
+    this.bodyPart = this.bodyPart === bp ? '' : bp;
+    this.search();
+  }
+
+  setEquipment(eq: string) {
+    this.equipment = this.equipment === eq ? '' : eq;
+    this.search();
+  }
+
+  setCategory(cat: string) {
+    this.category = this.category === cat ? '' : cat;
+    this.search();
+  }
+
+  search() {
+    this.offset = 0;
+    this.isLoading = true;
+    this.gymApi
+      .searchCatalog({
+        q: this.query || undefined,
+        bp: this.bodyPart || undefined,
+        eq: this.equipment || undefined,
+        cat: this.category || undefined,
+        limit: this.pageSize,
+        offset: 0,
+      })
+      .subscribe({
+        next: ({ total, exercises }) => {
+          this.results = exercises;
+          this.total = total;
+          this.offset = exercises.length;
+        },
+        error: () => (this.errorMessage = 'No se pudo cargar el catálogo.'),
+      })
+      .add(() => (this.isLoading = false));
+  }
+
+  loadMore() {
+    if (this.isLoading || this.offset >= this.total) return;
+    this.isLoading = true;
+    this.gymApi
+      .searchCatalog({
+        q: this.query || undefined,
+        bp: this.bodyPart || undefined,
+        eq: this.equipment || undefined,
+        cat: this.category || undefined,
+        limit: this.pageSize,
+        offset: this.offset,
+      })
+      .subscribe({
+        next: ({ total, exercises }) => {
+          this.results = [...this.results, ...exercises];
+          this.total = total;
+          this.offset += exercises.length;
+        },
+        error: () => undefined,
+      })
+      .add(() => (this.isLoading = false));
+  }
+
+  // -- Detalle ---------------------------------------------------------------
+
+  openDetail(ex: CatalogExercise) {
+    this.detail = ex;
+    this.detailStats = null;
+    this.detailLoading = true;
+    this.showClip = false;
+    this.clipFailed = false;
+    this.gymApi
+      .getExerciseStats(ex.id)
+      .then((stats) => (this.detailStats = stats))
+      .catch(() => (this.detailStats = null))
+      .finally(() => (this.detailLoading = false));
+  }
+
+  closeDetail() {
+    this.detail = null;
+    this.detailStats = null;
+    this.addToRoutineOpen = false;
+  }
+
+  toggleClip() {
+    this.showClip = !this.showClip;
+    this.clipFailed = false;
+  }
+
+  onClipError() {
+    this.clipFailed = true;
+  }
+
+  imageUrl(ex: CatalogExercise | null): string {
+    return ex ? this.gymApi.exerciseImageUrl(ex) : '';
+  }
+
+  clipUrl(ex: CatalogExercise | null): string {
+    return ex ? this.gymApi.exerciseClipUrl(ex) : '';
+  }
+
+  rowsSummary(rows: { w: number; r: number }[]): string {
+    return rows.map((r) => `${r.w}×${r.r}`).join(', ');
+  }
+
+  // -- Añadir a rutina ---------------------------------------------------------
+
+  async openAddToRoutine() {
+    if (!this.detail) return;
+    this.addToRoutineOpen = true;
+    if (!this.routines.length) {
+      this.routinesLoading = true;
+      try {
+        const { routines } = await this.gymApi.getRoutines();
+        this.routines = routines;
+      } catch {
+        this.errorMessage = 'No se pudieron cargar tus rutinas.';
+      } finally {
+        this.routinesLoading = false;
       }
     }
+  }
 
-    if (Object.keys(changes).length === 0) {
-      this.errorMessage = 'Cambia al menos un campo para aplicar una actualización parcial.';
-      this.successMessage = '';
+  closeAddToRoutine() {
+    this.addToRoutineOpen = false;
+  }
+
+  async addToRoutine(routine: Routine) {
+    const ex = this.detail;
+    if (!ex || this.addingRoutineId) return;
+    if (routine.exercises.some((e) => e.id === ex.id)) {
+      this.successMessage = `«${ex.name}» ya está en ${routine.name}.`;
+      this.addToRoutineOpen = false;
+      setTimeout(() => (this.successMessage = ''), 2500);
       return;
     }
-
-    this.errorMessage = '';
-    this.successMessage = '';
-    this.isLoading = true;
-    this.exercisesApi.updateExercise(this.editingExercise.id, changes)
-      .pipe(finalize(() => this.isLoading = false))
-      .subscribe({
-        next: ({ exercise, message }) => {
-          this.exercises = this.exercises.map((item) => item.id === exercise.id ? exercise : item);
-          this.successMessage = message;
-          this.resetForm();
-        },
-        error: (error: unknown) => this.showError(error, 'No se pudo actualizar el ejercicio.'),
+    this.addingRoutineId = routine.id;
+    try {
+      await this.gymApi.updateRoutine(routine.id, {
+        exercises: [
+          ...routine.exercises,
+          { id: ex.id, name: ex.name, sets: 3, reps: 10, weight: 0, restSec: 90 },
+        ],
       });
-  }
-
-  editExercise(exercise: Exercise): void {
-    this.editingExercise = exercise;
-    this.form = {
-      name: exercise.name,
-      muscleGroup: exercise.muscleGroup,
-      equipment: exercise.equipment,
-      notes: exercise.notes,
-    };
-    this.errorMessage = '';
-    this.successMessage = '';
-  }
-
-  deleteExercise(exercise: Exercise): void {
-    if (!window.confirm(`¿Eliminar "${exercise.name}"?`)) return;
-
-    this.errorMessage = '';
-    this.successMessage = '';
-    this.isLoading = true;
-    this.exercisesApi.deleteExercise(exercise.id)
-      .pipe(finalize(() => this.isLoading = false))
-      .subscribe({
-        next: ({ message }) => {
-          this.exercises = this.exercises.filter((item) => item.id !== exercise.id);
-          this.successMessage = message;
-          if (this.editingExercise?.id === exercise.id) this.resetForm();
-        },
-        error: (error: unknown) => this.showError(error, 'No se pudo eliminar el ejercicio.'),
-      });
-  }
-
-  resetForm(): void {
-    this.form = emptyExercise();
-    this.editingExercise = null;
-  }
-
-  private normalizedForm(): ExerciseInput {
-    return {
-      name: this.form.name.trim(),
-      muscleGroup: this.form.muscleGroup.trim(),
-      equipment: this.form.equipment.trim(),
-      notes: this.form.notes.trim(),
-    };
-  }
-
-  private showError(error: unknown, fallback: string): void {
-    this.successMessage = '';
-    if (error instanceof HttpErrorResponse) {
-      this.errorMessage = error.error?.message
-        ?? (error.status === 0 ? 'No se pudo conectar con la API.' : fallback);
-      return;
+      // Refresca la copia local de rutinas
+      this.routines = this.routines.map((r) =>
+        r.id === routine.id
+          ? { ...r, exercises: [...r.exercises, { id: ex.id, name: ex.name, sets: 3, reps: 10, weight: 0, restSec: 90 }] }
+          : r,
+      );
+      this.successMessage = `Añadido a ${routine.name}.`;
+      this.addToRoutineOpen = false;
+      this.detail = null;
+      setTimeout(() => (this.successMessage = ''), 2500);
+    } catch (error: any) {
+      this.errorMessage = error?.error?.message || 'No se pudo añadir el ejercicio.';
+    } finally {
+      this.addingRoutineId = null;
     }
-    this.errorMessage = fallback;
   }
 }

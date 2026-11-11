@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, inject } from '@angular/core';
+import { Component, OnInit, AfterViewInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonContent } from '@ionic/angular';
@@ -12,7 +12,8 @@ import { AuthApiService } from '../../services/auth-api.service';
   templateUrl: './login.page.html',
   styleUrls: ['./login.page.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, IonContent]
+  imports: [CommonModule, FormsModule, IonContent],
+  changeDetection: ChangeDetectionStrategy.Eager,
 })
 export class LoginPage implements OnInit, AfterViewInit {
   username: string = '';

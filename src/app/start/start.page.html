@@ -1,13 +1,338 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>start</ion-title>
-  </ion-toolbar>
-</ion-header>
+<ion-content [fullscreen]="true" class="start-content">
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">start</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <!-- Fondo liquid glass -->
+  <div class="gym-bg gym-bg-1"></div>
+  <div class="gym-video-overlay"></div>
+
+  <div class="gym-page-wrapper">
+
+    <!-- Barra superior -->
+    <div class="gym-navbar">
+      <div class="gym-nav-brand">
+        <span>🏋️</span>
+        <span class="gym-nav-title">{{ workout ? workout.name : 'Entrenar' }}</span>
+      </div>
+      <div class="gym-nav-actions">
+        <span class="nav-timer" *ngIf="workout && !isSaving">
+          <ion-icon name="timer-outline"></ion-icon>
+          {{ elapsed() }}
+        </span>
+        <ion-spinner *ngIf="isSaving" name="crescent" style="width:16px;height:16px;"></ion-spinner>
+      </div>
+    </div>
+
+    <div class="gym-container">
+
+      <!-- Carga -->
+      <div *ngIf="isLoading" class="empty-state">
+        <ion-spinner name="crescent" color="light"></ion-spinner>
+      </div>
+
+      <div class="glass-card" *ngIf="errorMessage">
+        <p style="margin:0; color:#f87171; font-size:12px;">{{ errorMessage }}</p>
+      </div>
+
+      <!-- ============ SIN SESIÓN: elegir entrenamiento ============ -->
+      <ng-container *ngIf="!isLoading && !workout">
+
+        <div class="header-section">
+          <span class="glass-badge">{{ home?.dayName || 'Hoy' }}</span>
+          <h2>¿Qué entrenamos hoy?</h2>
+          <p>Elige una rutina de tu plan o empieza una sesión libre.</p>
+        </div>
+
+        <!-- Rutinas de hoy -->
+        <div class="glass-card" *ngIf="home && home.todayRoutines.length > 0">
+          <div class="card-title">
+            <ion-icon name="calendar-outline" class="icon" style="color: #4ade80;"></ion-icon>
+            <h3>Rutinas de hoy</h3>
+          </div>
+          <div class="glass-row routine-row" *ngFor="let r of home.todayRoutines">
+            <span class="routine-emoji">{{ r.emoji }}</span>
+            <div class="glass-row-main">
+              <span class="glass-row-title">{{ r.name }}</span>
+              <span class="glass-row-sub">{{ r.exerciseCount }} ejercicios</span>
+            </div>
+            <button class="glass-btn glass-btn-sm" (click)="startSession(r.id)" [disabled]="isStarting">
+              <ion-icon name="play-outline"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="glass-card" *ngIf="home && home.todayRoutines.length === 0">
+          <div class="empty-state">
+            <ion-icon name="calendar-outline" class="empty-icon"></ion-icon>
+            <p>Hoy toca descanso según tu plan.</p>
+            <button class="glass-btn glass-btn-blue glass-btn-sm" style="margin-top:8px;" (click)="irAlPlan()">
+              Configurar mi semana
+            </button>
+          </div>
+        </div>
+
+        <!-- Resto de rutinas -->
+        <div class="glass-card" *ngIf="otherRoutines().length > 0">
+          <div class="card-title">
+            <ion-icon name="barbell-outline" class="icon" style="color: #60a5fa;"></ion-icon>
+            <h3>Mis rutinas</h3>
+          </div>
+          <div class="glass-row routine-row" *ngFor="let r of otherRoutines()">
+            <span class="routine-emoji">{{ r.emoji }}</span>
+            <div class="glass-row-main">
+              <span class="glass-row-title">{{ r.name }}</span>
+              <span class="glass-row-sub">{{ r.exercises.length }} ejercicios</span>
+            </div>
+            <button class="glass-btn glass-btn-sm" (click)="startSession(r.id)" [disabled]="isStarting">
+              <ion-icon name="play-outline"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- Sesión libre -->
+        <div class="glass-card">
+          <div class="card-title">
+            <ion-icon name="flame-outline" class="icon" style="color: #fbbf24;"></ion-icon>
+            <h3>Sesión libre</h3>
+          </div>
+          <p class="text-muted" style="margin:0 0 10px 0;">
+            Empieza sin rutina y añade ejercicios del catálogo sobre la marcha.
+          </p>
+          <button class="glass-btn glass-btn-blue" (click)="startSession(null)" [disabled]="isStarting">
+            <span *ngIf="!isStarting"><ion-icon name="play-outline"></ion-icon> Entrenar libre</span>
+            <ion-spinner *ngIf="isStarting" name="crescent" style="width:16px;height:16px;"></ion-spinner>
+          </button>
+        </div>
+      </ng-container>
+
+      <!-- ============ SESIÓN ACTIVA ============ -->
+      <ng-container *ngIf="!isLoading && workout">
+
+        <!-- Resumen de sesión -->
+        <div class="glass-card session-summary">
+          <div class="stats-grid session-grid">
+            <div class="stat-item">
+              <span class="stat-label">Tiempo</span>
+              <span class="stat-value">{{ elapsed() }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Series</span>
+              <span class="stat-value">{{ totalSets() }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Volumen</span>
+              <span class="stat-value">{{ totalVolume() | number: '1.0-0' }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">PRs</span>
+              <span class="stat-value highlight">{{ sessionPrs() }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ejercicios -->
+        <div class="glass-card">
+          <div class="card-title">
+            <ion-icon name="barbell-outline" class="icon" style="color: #60a5fa;"></ion-icon>
+            <h3>Ejercicios ({{ workout.entries.length }})</h3>
+            <button class="glass-btn glass-btn-blue glass-btn-sm card-title-action" (click)="openPicker()">
+              <span style="display:flex;align-items:center;gap:4px;"><ion-icon name="add-outline"></ion-icon> Añadir</span>
+            </button>
+          </div>
+
+          <div *ngIf="workout.entries.length === 0" class="empty-state">
+            <ion-icon name="barbell-outline" class="empty-icon"></ion-icon>
+            <p>Sin ejercicios todavía. Añade el primero desde el catálogo.</p>
+            <button class="glass-btn glass-btn-sm" style="margin-top:8px;" (click)="openPicker()">
+              <ion-icon name="add-outline"></ion-icon> Añadir ejercicio
+            </button>
+          </div>
+
+          <div class="ex-card" *ngFor="let en of workout.entries; let i = index">
+
+            <div class="ex-card-head" (click)="toggleExpanded(i)">
+              <div class="ex-card-title">
+                <span class="ex-name">{{ en.name }}</span>
+                <span class="ex-meta">
+                  {{ en.cfg.sets }} × {{ en.cfg.reps }}<span *ngIf="en.cfg.weight > 0"> · {{ en.cfg.weight }} kg</span>
+                  · {{ doneRows(en) }}/{{ en.cfg.sets }} series
+                </span>
+              </div>
+              <span class="glass-badge" *ngIf="doneRows(en) >= en.cfg.sets">✔</span>
+              <ion-icon
+                class="ex-chevron"
+                [name]="expanded === i ? 'chevron-up-outline' : 'chevron-down-outline'">
+              </ion-icon>
+            </div>
+
+            <div class="glass-progress ex-progress">
+              <div class="glass-progress-fill" [style.width.%]="progressPct(en)"></div>
+            </div>
+
+            <div class="ex-card-body" *ngIf="expanded === i">
+
+              <div class="last-hint">
+                <ion-icon name="trending-up-outline"></ion-icon>
+                <span *ngIf="en.last">Última marca: {{ en.last.w }} kg × {{ en.last.r }}</span>
+                <span *ngIf="!en.last">Primera vez con este ejercicio</span>
+                <span class="glass-badge amber" *ngIf="en.note">{{ en.note }}</span>
+              </div>
+
+              <!-- Series registradas -->
+              <div class="set-row" *ngFor="let row of en.rows; let j = index" [class.warmup]="row.phase === 'warmup'">
+                <span class="set-num">{{ j + 1 }}</span>
+                <span class="set-val">{{ row.w }} kg × {{ row.r }}</span>
+                <span class="glass-badge amber" *ngIf="row.phase === 'warmup'">Calentamiento</span>
+                <span class="glass-badge" *ngIf="isPr(en, row)">¡PR!</span>
+                <button class="glass-icon-btn sm" (click)="removeRow(en, j)">
+                  <ion-icon name="close-outline"></ion-icon>
+                </button>
+              </div>
+
+              <p class="text-muted" *ngIf="en.rows.length === 0" style="margin:6px 0;">
+                Aún no has registrado series de este ejercicio.
+              </p>
+
+              <!-- Steppers de peso/reps -->
+              <div class="stepper-grid">
+                <div class="stepper">
+                  <label class="glass-label">Peso (kg)</label>
+                  <div class="stepper-ctrl">
+                    <button class="glass-icon-btn sm" (click)="bumpWeight(en, -2.5)">−</button>
+                    <input class="stepper-input" type="number" min="0" step="0.5"
+                           [ngModel]="draftFor(en).w" (ngModelChange)="setDraftW(en, $event)">
+                    <button class="glass-icon-btn sm" (click)="bumpWeight(en, 2.5)">+</button>
+                  </div>
+                </div>
+                <div class="stepper">
+                  <label class="glass-label">Reps</label>
+                  <div class="stepper-ctrl">
+                    <button class="glass-icon-btn sm" (click)="bumpReps(en, -1)">−</button>
+                    <input class="stepper-input" type="number" min="1" step="1"
+                           [ngModel]="draftFor(en).r" (ngModelChange)="setDraftR(en, $event)">
+                    <button class="glass-icon-btn sm" (click)="bumpReps(en, 1)">+</button>
+                  </div>
+                </div>
+                <div class="stepper">
+                  <label class="glass-label">Descanso (s)</label>
+                  <div class="stepper-ctrl">
+                    <button class="glass-icon-btn sm" (click)="bumpRest(en, -15)">−</button>
+                    <span class="stepper-value">{{ en.cfg.restSec }}</span>
+                    <button class="glass-icon-btn sm" (click)="bumpRest(en, 15)">+</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="set-actions">
+                <button class="glass-btn glass-btn-ghost glass-btn-sm" (click)="addRow(en, true)">
+                  Calentamiento
+                </button>
+                <button class="glass-btn set-main-btn" (click)="addRow(en)">
+                  <ion-icon name="checkmark-outline"></ion-icon> Completar serie
+                </button>
+              </div>
+
+              <button class="glass-btn glass-btn-danger glass-btn-sm" style="margin-top:10px;" (click)="removeEntry(i)">
+                <span style="display:flex;align-items:center;gap:4px;"><ion-icon name="trash-outline"></ion-icon> Quitar ejercicio</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notas -->
+        <div class="glass-card">
+          <div class="card-title">
+            <ion-icon name="save-outline" class="icon" style="color: #94a3b8;"></ion-icon>
+            <h3>Notas de la sesión</h3>
+          </div>
+          <textarea class="glass-input" rows="2" placeholder="¿Cómo te sientes? Notas rápidas..."
+                    [ngModel]="workout.notes" (ngModelChange)="onNotes($event)"></textarea>
+          <p class="text-muted" style="margin:6px 0 0 0;">
+            Se guarda automáticamente al terminar cada serie.
+          </p>
+        </div>
+
+        <!-- Terminar -->
+        <div class="glass-card">
+          <button class="glass-btn finish-btn" (click)="finish()" [disabled]="isFinishing">
+            <span *ngIf="!isFinishing" style="display:flex;align-items:center;gap:6px;">
+              <ion-icon name="stop-outline"></ion-icon> Terminar sesión
+            </span>
+            <ion-spinner *ngIf="isFinishing" name="crescent" style="width:16px;height:16px;"></ion-spinner>
+          </button>
+          <button class="glass-btn glass-btn-danger" style="margin-top:8px;" (click)="discard()">
+            <span style="display:flex;align-items:center;gap:6px;"><ion-icon name="trash-outline"></ion-icon> Descartar sesión</span>
+          </button>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+
+  <!-- Barra de descanso flotante -->
+  <div class="rest-bar" *ngIf="restRemaining > 0">
+    <div class="rest-head">
+      <ion-icon name="timer-outline"></ion-icon>
+      <span class="rest-time">{{ restRemaining }}s</span>
+      <span class="rest-label">descanso</span>
+      <div class="rest-actions">
+        <button class="glass-btn glass-btn-ghost glass-btn-sm" (click)="addRestSec(15)">+15s</button>
+        <button class="glass-btn glass-btn-sm" (click)="stopRest()">Saltar</button>
+      </div>
+    </div>
+    <div class="glass-progress">
+      <div class="glass-progress-fill" [style.width.%]="restPct()"></div>
+    </div>
+  </div>
+
+  <!-- Picker de ejercicios -->
+  <div class="glass-sheet-backdrop" *ngIf="pickerOpen"></div>
+  <div class="glass-sheet" *ngIf="pickerOpen">
+    <div class="glass-sheet-header">
+      <h3>Añadir ejercicio</h3>
+      <button class="glass-icon-btn sm" (click)="closePicker()">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+    <app-exercise-picker (picked)="onExercisePicked($event)" (closed)="closePicker()"></app-exercise-picker>
+  </div>
+
+  <!-- Recap de sesión terminada -->
+  <div class="glass-sheet-backdrop" *ngIf="recap"></div>
+  <div class="glass-sheet recap-sheet" *ngIf="recap">
+    <div class="recap-emoji">🎉</div>
+    <h3 class="recap-title">¡Sesión terminada!</h3>
+    <p class="text-muted">{{ recap.name }}</p>
+
+    <div class="recap-grid">
+      <div class="stat-item">
+        <span class="stat-label">Duración</span>
+        <span class="stat-value">{{ fmtDuration(recap.durationSec || 0) }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Series</span>
+        <span class="stat-value">{{ recapSets() }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Volumen</span>
+        <span class="stat-value">{{ recapVolume() | number: '1.0-0' }} kg</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">PRs</span>
+        <span class="stat-value highlight">{{ recapPrs() }}</span>
+      </div>
+    </div>
+
+    <div class="recap-ex" *ngFor="let en of recap.entries">
+      <span class="recap-ex-name">{{ en.name }}</span>
+      <span class="recap-ex-meta">
+        {{ workRows(en).length }} series · {{ entryVolume(en) | number: '1.0-0' }} kg
+      </span>
+    </div>
+
+    <button class="glass-btn glass-btn-blue" style="margin-top:14px;" (click)="goRecap('stats')">
+      <span style="display:flex;align-items:center;gap:6px;"><ion-icon name="ribbon-outline"></ion-icon> Ver estadísticas</span>
+    </button>
+    <button class="glass-btn glass-btn-ghost" style="margin-top:8px;" (click)="goRecap('home')">
+      Volver al inicio
+    </button>
+  </div>
+
 </ion-content>

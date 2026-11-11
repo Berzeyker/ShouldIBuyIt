@@ -1,109 +1,154 @@
 <ion-content [fullscreen]="true" class="home-content">
-  
-  <!-- Video de fondo manejado con CSS absoluto -->
-  <video autoplay muted loop playsinline class="bg-video">
-    <source src="/assets/images/Backgrounds/backvideo1.mp4" type="video/mp4">
-    Tu navegador no soporta videos HTML5.
-  </video>
 
-  <!-- Capa oscura semitransparente -->
-  <div class="video-overlay"></div>
+  <!-- Fondo liquid glass -->
+  <div class="gym-bg gym-bg-1"></div>
+  <div class="gym-video-overlay"></div>
 
-  <!-- Contenido real de la app (Envuelto para asegurar visibilidad) -->
-  <div class="page-scroll-wrapper">
+  <div class="gym-page-wrapper">
 
     <!-- Barra superior -->
-    <div class="top-navbar">
-      <div class="nav-brand">
-        <span class="brand-icon">⚡</span>
-        <span class="brand-title">openGym Tracker</span>
+    <div class="gym-navbar">
+      <div class="gym-nav-brand">
+        <span>⚡</span>
+        <span class="gym-nav-title">openGym Tracker</span>
       </div>
-      <div class="nav-actions">
-        <span class="brand-title" style="font-size: 12px; opacity: 0.85; margin-right: 8px;">{{ currentUser }}</span>
-        <button class="icon-btn" title="Cambiar usuario" (click)="cambiarUsuario()">
+      <div class="gym-nav-actions">
+        <span class="gym-nav-title" style="font-size: 12px; opacity: 0.85;">{{ currentUser }}</span>
+        <button class="glass-icon-btn" title="Cambiar usuario" (click)="cambiarUsuario()">
           <ion-icon name="log-out-outline"></ion-icon>
         </button>
       </div>
     </div>
 
-    <!-- Contenedor Principal -->
-    <div class="main-container">
+    <div class="gym-container">
 
       <!-- Header de Bienvenida -->
       <div class="header-section">
-        <span class="badge">Self-Hosted Fitness</span>
+        <span class="glass-badge">{{ home?.dayName || 'Hoy' }}</span>
         <h2>Progreso Diario</h2>
-        <p>Registra tus pesos, series y mantén tu racha activa.</p>
+        <p>Registra tus series, sigue tu plan y mantén tu racha activa.</p>
       </div>
 
-      <!-- Tarjeta de Resumen Rápido (Stats Grid) -->
-      <div class="evaluation-card results-card">
+      <!-- Error de conexión -->
+      <div class="glass-card" *ngIf="errorMessage">
+        <p style="margin:0; color:#f87171; font-size:12px;">{{ errorMessage }}</p>
+      </div>
+
+      <!-- Sesión en curso -->
+      <div class="glass-card" *ngIf="home?.activeWorkout">
         <div class="card-title">
-          <ion-icon name="stats-chart-outline" class="icon" style="color: #4ade80;"></ion-icon>
-          <h3>Estadísticas del Mes</h3>
+          <ion-icon name="play-outline" class="icon" style="color: #fbbf24;"></ion-icon>
+          <h3>Sesión en curso</h3>
         </div>
-        
-        <div class="stats-grid">
-          <div class="stat-item">
-            <span class="stat-label">Peso Actual</span>
-            <span class="stat-value highlight">78.4 kg</span>
+        <div class="glass-inner routine-banner">
+          <div class="routine-info">
+            <span class="routine-name">{{ home.activeWorkout.name }}</span>
+            <span class="routine-status">
+              {{ home.activeWorkout.entries.length }} ejercicios cargados
+            </span>
           </div>
-          <div class="stat-item">
-            <span class="stat-label">Racha</span>
-            <span class="stat-value">12 Semanas</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Entrenamientos</span>
-            <span class="stat-value">35 Total</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Este Mes</span>
-            <span class="stat-value">5 Sesiones</span>
-          </div>
+          <button class="glass-btn glass-btn-blue glass-btn-sm" (click)="continuarSesion()">Continuar</button>
         </div>
       </div>
 
-      <!-- Tarjeta de Rutina Activa / Check-in -->
-      <div class="evaluation-card">
+      <!-- Rutina de hoy -->
+      <div class="glass-card" *ngIf="!home?.activeWorkout">
         <div class="card-title">
           <ion-icon name="barbell-outline" class="icon" style="color: #60a5fa;"></ion-icon>
           <h3>Rutina de Hoy</h3>
+          <button class="glass-btn glass-btn-ghost glass-btn-sm card-title-action" (click)="irAlPlan()">Ver plan</button>
         </div>
 
-        <div class="routine-banner">
-          <div class="routine-info">
-            <span class="routine-name">Push Day (Pecho, Tríceps)</span>
-            <span class="routine-status">Pendiente - 0/19 ejercicios</span>
+        <div *ngIf="home && home.todayRoutines.length > 0">
+          <div class="glass-inner routine-banner" *ngFor="let r of home.todayRoutines" style="margin-bottom:8px;">
+            <div class="routine-info">
+              <span class="routine-name">{{ r.emoji }} {{ r.name }}</span>
+              <span class="routine-status">{{ r.exerciseCount }} ejercicios</span>
+            </div>
+            <button class="glass-btn glass-btn-sm" (click)="iniciarRutina(r.id)">Iniciar</button>
           </div>
-          <button class="evaluate-btn-small" (click)="iniciarRutina()">Iniciar</button>
+        </div>
+
+        <div *ngIf="home && home.todayRoutines.length === 0" class="empty-state">
+          <ion-icon name="calendar-outline" class="empty-icon"></ion-icon>
+          <p>Hoy es descanso. {{ home.lastWorkout ? 'Tu última sesión fue «' + home.lastWorkout.name + '».' : 'Aún no hay sesiones registradas.' }}</p>
+          <button class="glass-btn glass-btn-blue glass-btn-sm" style="margin-top:8px;" (click)="irAlPlan()">
+            Configurar mi semana
+          </button>
+        </div>
+      </div>
+
+      <!-- Tarjeta de estadísticas -->
+      <div class="glass-card">
+        <div class="card-title">
+          <ion-icon name="stats-chart-outline" class="icon" style="color: #4ade80;"></ion-icon>
+          <h3>Estadísticas</h3>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-item">
+            <span class="stat-label">Peso Actual</span>
+            <span class="stat-value highlight">{{ home?.bodyweight ? (home.bodyweight.weight + ' kg') : '—' }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label"><ion-icon name="flame-outline" style="vertical-align:-2px;"></ion-icon> Racha</span>
+            <span class="stat-value">{{ summary?.streakWeeks ?? 0 }} sem.</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Entrenamientos</span>
+            <span class="stat-value">{{ home?.totals?.total ?? 0 }} total</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Este Mes</span>
+            <span class="stat-value">{{ home?.totals?.thisMonth ?? 0 }} sesiones</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Última sesión -->
+      <div class="glass-card" *ngIf="home?.lastWorkout">
+        <div class="card-title">
+          <ion-icon name="trending-up-outline" class="icon" style="color: #60a5fa;"></ion-icon>
+          <h3>Última sesión</h3>
+        </div>
+        <div class="glass-inner">
+          <div class="routine-info">
+            <span class="routine-name">{{ home.lastWorkout.name }}</span>
+            <span class="routine-status">
+              {{ volumenUltima() | number:'1.0-0' }} kg de volumen<span *ngIf="duracionUltima()"> · {{ duracionUltima() }}</span>
+            </span>
+          </div>
         </div>
       </div>
 
       <!-- Registro Rápido de Peso -->
-      <div class="evaluation-card">
+      <div class="glass-card">
         <div class="card-title">
           <ion-icon name="scale-outline" class="icon" style="color: #fbbf24;"></ion-icon>
           <h3>Registro de Peso Corporal</h3>
         </div>
-        
+
         <div class="input-group">
-          <label>Peso de hoy (kg)</label>
-          <input 
-            type="number" 
-            step="0.1" 
-            [value]="currentWeight" 
-            (input)="onWeightInput($event)" 
+          <label class="glass-label">Peso de hoy (kg)</label>
+          <input
+            type="number"
+            step="0.1"
+            class="glass-input"
+            [value]="currentWeight"
+            (input)="onWeightInput($event)"
             placeholder="Ej. 78.5">
         </div>
 
-        <button class="evaluate-btn" (click)="guardarPeso()" [disabled]="isLoading">
-          <span>{{ isLoading ? 'Guardando...' : 'Guardar Peso' }}</span>
+        <button class="glass-btn" (click)="guardarPeso()" [disabled]="isSavingWeight">
+          <span>{{ isSavingWeight ? 'Guardando...' : 'Guardar Peso' }}</span>
           <ion-icon name="checkmark-outline"></ion-icon>
         </button>
 
-        <!-- Mensaje de éxito dinámico -->
         <div *ngIf="successMessage" style="margin-top: 10px; color: #4ade80; font-size: 12px; text-align: center; font-weight: 600;">
           {{ successMessage }}
+        </div>
+        <div *ngIf="errorMessage && !home" style="margin-top: 10px; color: #f87171; font-size: 12px; text-align: center;">
+          {{ errorMessage }}
         </div>
       </div>
 
